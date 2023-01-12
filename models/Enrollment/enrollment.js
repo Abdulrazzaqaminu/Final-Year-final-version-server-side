@@ -55,14 +55,6 @@ const EnrollmentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    loans: {
-        loan_id: {
-            type: String
-        },
-        amount: {
-            type: String
-        }
-    },
     address: {
         state: {
             type: String,

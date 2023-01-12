@@ -5,8 +5,8 @@ const {
     getPayrolls } = require("../../controllers/Payroll/payroll");
 
 // get list of all the payrolls
-router.get("/", getPayrolls)
+router.get("/", getPayrolls);
 // get specific payroll
-router.get("/:employeeID", getSpecificPayroll)
+router.get("/:employee_id", getSpecificPayroll);
 
 module.exports = router;

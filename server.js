@@ -2,10 +2,11 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require("mongoose");
-const cors = require("cors");
+// const cors = require("cors");
 const app = express();
 
 // requiring routes
+const dashboardRoute = require("./routes/Dashboard/dashboard");
 const departmentRoute = require("./routes/Department/department");
 const unitRoute = require("./routes/Department/unit");
 const enrollmentRoute = require("./routes/Enrollment/enrollment");
@@ -14,39 +15,41 @@ const recordAttendanceRoute = require("./routes/Attendance/Record/recordAttendan
 const reportAttendanceRoute = require("./routes/Attendance/Report/attendanceReport");
 const loansRoute = require("./routes/Loans/loans");
 const payrollRoute = require("./routes/Payroll/payroll");
+const employeeSalaryRoute = require("./routes/Payroll/Employee_Salary/employee_salary");
 
 // Environmental variables
 const PORT = process.env.PORT;
 const DB_URI = process.env.DB_URI;
 
 // mongoDB connection
-const connection = async () =>{
+const connection = async () => {
     try {
         mongoose.set('strictQuery', false);
-        await mongoose.connect(DB_URI, {useNewUrlParser: true})
+        await mongoose.connect(DB_URI, {useNewUrlParser: true});
         console.log("Connected to database");
     } catch (error) {
         throw error;
     }
 }
 const DB = mongoose.connection;
-DB.on("disconnected", (error) =>{
+DB.on("disconnected", (error) => {
     console.log("MongoDB Disconnected!");
     throw error;
-})
-DB.on("connected", () =>{
+});
+DB.on("connected", () => {
     console.log("MongoDB Connected!");
-})
+});
 
 // middlewares
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
-app.use(cors());
-app.use((req, res, next) =>{
+// app.use(cors());
+app.use((req, res, next) => {
     console.log(req.method, req.path);
     next();
-})
+});
 // routes
+app.use("/api/dashboard", dashboardRoute);
 app.use("/api/department", departmentRoute);
 app.use("/api/unit", unitRoute);
 app.use("/api/enrollment", enrollmentRoute);
@@ -55,8 +58,9 @@ app.use("/api/attendance/record_attendance", recordAttendanceRoute);
 app.use("/api/attendance/attendance_report", reportAttendanceRoute);
 app.use("/api/loans", loansRoute);
 app.use("/api/payroll", payrollRoute);
+app.use("/api/payroll", employeeSalaryRoute);
 
-app.listen(PORT, () =>{
+app.listen(PORT, () => {
     connection();
-    console.log(`Server running at port ${PORT}`)
-})
+    console.log(`Server running at port ${PORT}`);
+});

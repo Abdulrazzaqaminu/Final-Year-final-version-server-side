@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const Enrollment = require("../Enrollment/enrollment");
 
-const PayrollSchema = new mongoose.Schema({
+const WorkingHoursSchema = mongoose.Schema({
     staff_ID: {
         type: String,
         required: true
@@ -18,26 +17,23 @@ const PayrollSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    enrollment_date: {
+    date: {
         type: String,
         required: true
     },
-    employee_id: [
-        {
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: Enrollment
-        }
-    ],
-    loans: {
-        type: [
-            Number
-        ],
+    hours: {
+        type: Number,
+        required: true
     },
-    annual_gross: {
+    minutes: {
+        type: Number,
+        required: true
+    },
+    seconds: {
         type: Number,
         required: true
     }
 })
 
-const Payroll = mongoose.model("Payroll", PayrollSchema);
-module.exports = Payroll;
+const WorkingHours = mongoose.model("working_hours", WorkingHoursSchema);
+module.exports = WorkingHours;

@@ -2,11 +2,14 @@ const express = require("express");
 const router = express.Router();
 const {
     enrollEmployee,
-    getEmployees }  = require("../../controllers/Enrollment/enrollment");
+    getEmployees, 
+    getSingleEmployee }  = require("../../controllers/Enrollment/enrollment");
 
 // get list of all employees
-router.get("/", getEmployees)
+router.get("/", getEmployees);
+// get single employees
+router.get("/:employee_id", getSingleEmployee);
 // enroll employees
-router.post("/", enrollEmployee)
+router.post("/", enrollEmployee);
 
 module.exports = router;

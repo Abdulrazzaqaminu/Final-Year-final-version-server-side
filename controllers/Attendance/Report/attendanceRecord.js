@@ -1,23 +1,39 @@
 const AttendanceHistory = require("../../../models/Attendance/attendanceHistory");
 
-const filter_by_date = async (req, res, next) =>{
+const filter_by_date = async (req, res, next) => {
     try {
-        const filtered_date = await AttendanceHistory.find({
+        AttendanceHistory.find({
             date: {
                 $gte: req.body.from,
                 $lte: req.body.to
             }
+        }, (error, filtered_date) => {
+            if(error) throw error;
+            else {
+                if(filtered_date.length > 0){
+                    res.status(200).json(filtered_date);
+                } else {
+                    res.status(404).json({"Message": "No records found"});
+                }
+            } 
         })
-        res.status(200).json(filtered_date);
     } catch (error) {
         next(error);
     }
 }
 
-const attendanceHistory = async (req, res, next) =>{
+const attendanceHistory = async (req, res, next) => {
     try {
-        const historyList = await AttendanceHistory.find();
-        res.status(200).json(historyList);
+        AttendanceHistory.find({}, (error, history) => {
+            if(error) throw error;
+            else {
+                if(history.length > 0){
+                    res.status(200).json(history);
+                } else {
+                    res.status(404).json({"Error Message": "No records found"});
+                }
+            }
+        });
     } catch (error) {
         next(error);
     }
