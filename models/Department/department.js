@@ -2,17 +2,36 @@ const mongoose = require("mongoose");
 
 const DepartmentSchema = new mongoose.Schema({
     dept_HOD: {
-        type: String,
-        required: true
+        hod_id: {
+            type: String,
+            default: "N/A"
+        },
+        hod_first_name: {
+            type: String,
+            default: "N/A"
+        },
+        hod_last_name: {
+            type: String,
+            default: "N/A"
+        },
+        hod_email: {
+            type: String,
+            default: "N/A"
+        }
     },
-    dept_Name: {
+    dept_name: {
         type: String,
         required: true
     },
     unit: {
         type: [
             String
-        ],
+        ]
+    },
+    employee_ids: {
+        type: [
+            String
+        ]
     }
 }, {timestamps: true} );
 

@@ -8,7 +8,7 @@ const getAllUnitsUnderDepartment = async (req, res, next) => {
             if(err) throw err;
             else {
                 if(rs.length > 0) {
-                    Unit.find({dept_id: Department_ID}, {unit_name: 1, _id: 1}, (error, rs) => {
+                    Unit.find({dept_id: Department_ID}, (error, rs) => {
                         if(error) throw error;
                         else {
                             if(rs.length > 0) {
@@ -37,17 +37,35 @@ const createUnit = async (req, res ,next) => {
             if(error) throw error;
             else {
                 if(rs.length > 0) {
-                    const savedUnit = await newUnit.save();
-                    try {
-                        await Department.findByIdAndUpdate(Department_ID, {
-                            $push: {
-                                unit: savedUnit._id
+                    Unit.findOne({unit_name: req.body.unit_name}, (error, unit) => {
+                        if(error) throw error;
+                        else {
+                            if(unit){
+                                res.status(200).json({"Message": "Unit already exists"});
+                            } else {
+                                Department.findOne({dept_name: req.body.unit_name}, async (error, department) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(department) {
+                                            res.status(200).json({"Message": "Unit name matches a departments name"});
+                                        } else {
+                                            const savedUnit = await newUnit.save();
+                                            try {
+                                                await Department.findByIdAndUpdate(Department_ID, {
+                                                    $push: {
+                                                        unit: savedUnit._id
+                                                    }
+                                                });
+                                            res.status(200).json(savedUnit);
+                                            } catch (error) {
+                                                next(error);
+                                            }
+                                        }
+                                    }
+                                })
                             }
-                        });
-                    res.status(200).json(savedUnit);
-                    } catch (error) {
-                        next(error);
-                    }
+                        }
+                    })
                     // console.log("department exists");
                 } else {
                     res.status(404).json({"Message": "Department does not exist"});
@@ -67,18 +85,45 @@ const updateUnit = async (req, res , next) => {
             if(error) throw error ;
             else {
                 if(rs.length > 0) {
-                    Unit.find({dept_id: Department_ID}, async (err, rs) => {
-                        if(rs.length > 0) {
-                            const updatedUnit = await Unit.findByIdAndUpdate(
-                                Unit_ID,
-                                {$set: req.body}, 
-                                {new: true}
-                                );
-                            res.status(200).json(updatedUnit);
-                            // console.log("yes")
-                        } else {
-                            res.status(404).json({"Message": "Unit does not exist"});
-                            // console.log("There are no units under this department or the department does not exist");
+                    Unit.find({_id: Unit_ID}, (error, rs) => {
+                        if(error) throw error;
+                        else {
+                            if(rs.length > 0) {
+                                Department.findOne({dept_name: req.body.unit_name}, (error, department) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(department) {
+                                            res.status(200).json({"Message": "Unit name matches a departments name"});
+                                        } else {
+                                            Unit.findOne({dept_id: Department_ID}, (error, rs) => {
+                                                if(error) throw error;
+                                                else {
+                                                    if(rs) {
+                                                        Unit.find({unit_name: req.body.unit_name}, async (error, rs) => {
+                                                            if(error) throw error;
+                                                            else {
+                                                                if(rs.length > 0) {
+                                                                    res.status(200).json({"Message": "Unit name already exists"});
+                                                                } else {
+                                                                    const updatedUnit = await Unit.findByIdAndUpdate(
+                                                                        Unit_ID,
+                                                                        {$set: req.body}, 
+                                                                        {new: true}
+                                                                        );
+                                                                    res.status(200).json(updatedUnit);
+                                                                    // console.log("yes")
+                                                                }
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            })
+                                        }
+                                    }
+                                })
+                            } else {
+                                res.status(404).json({"Message": "Unit does not exist"});
+                            }
                         }
                     })
                 } else {
@@ -86,7 +131,6 @@ const updateUnit = async (req, res , next) => {
                 }
             }
         })
-       
     } catch (err) {
         next(err);
     }

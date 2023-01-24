@@ -8,6 +8,7 @@ const app = express();
 // requiring routes
 const dashboardRoute = require("./routes/Dashboard/dashboard");
 const departmentRoute = require("./routes/Department/department");
+const hodRoute = require("./routes/Department/hod");
 const unitRoute = require("./routes/Department/unit");
 const enrollmentRoute = require("./routes/Enrollment/enrollment");
 const findEmployeeRoute = require("./routes/Attendance/Record/confirmEmp");
@@ -51,6 +52,7 @@ app.use((req, res, next) => {
 // routes
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/department", departmentRoute);
+app.use("/api/hod", hodRoute);
 app.use("/api/unit", unitRoute);
 app.use("/api/enrollment", enrollmentRoute);
 app.use("/api/attendance/record_attendance", findEmployeeRoute);

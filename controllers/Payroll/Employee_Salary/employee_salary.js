@@ -1,4 +1,5 @@
-const Enrollment = require("../../../models/Enrollment/enrollment");
+// const Enrollment = require("../../../models/Enrollment/enrollment");
+const Payroll = require("../../../models/Payroll/payroll");
 const WorkingHours = require("../../../models/Attendance/working_hours");
 
 const salary_calculator = async (req, res, next) =>{
@@ -38,13 +39,13 @@ const salary_calculator = async (req, res, next) =>{
 
     const Employee_ID = req.params.employee_id;
     try {
-        Enrollment.find({_id: Employee_ID}, (error, employee) =>{
+        Payroll.find({employee_id: Employee_ID}, (error, employee) =>{
             if(error) throw error;
             else{
                 if(employee.length > 0) {
                     let email = employee[0].email;
                     let empInfo = employee[0];
-                    let gross = employee[0].salary;
+                    let gross = employee[0].annual_gross;
                     // console.log(email+" "+gross);
                     // console.log(empInfo);
                     WorkingHours.aggregate([

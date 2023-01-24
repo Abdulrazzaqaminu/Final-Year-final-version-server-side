@@ -29,11 +29,13 @@ const EnrollmentSchema = new mongoose.Schema({
     },
     department: {
         type: String,
-        required: true
+        required: true,
+        default: "N/A"
     },
     unit: {
         type: String,
-        required: true
+        required: true,
+        default: "N/A"
     },
     position: {
         type: Number,
@@ -69,7 +71,14 @@ const EnrollmentSchema = new mongoose.Schema({
             required: true
         }
     },
-
+    status: {
+        type: String,
+        default: "Active"
+    },
+    qrcode: {
+        type: String,
+        required: true
+    }
 }, {timestamps: true} )
 
 const Enrollment = mongoose.model("Enrollment", EnrollmentSchema);

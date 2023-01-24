@@ -3,7 +3,7 @@ const Exit = require("../../models/Attendance/exit");
 const Enrollment = require("../../models/Enrollment/enrollment");
 
 const dashboardAnalytics = async (req, res, next) => {
-    const numberOfEmployees = Enrollment.find();
+    const numberOfEmployees = Enrollment.find({status: "Active"});
     const numberOfEntries = Entry.find();
     const numberOfExits = Exit.find();
     Entry.find({}, {
