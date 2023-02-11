@@ -53,7 +53,7 @@ const EnrollmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    salary:{
+    gross_salary:{
         type: Number,
         required: true
     },

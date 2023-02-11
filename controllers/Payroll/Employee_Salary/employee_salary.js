@@ -1,6 +1,7 @@
 // const Enrollment = require("../../../models/Enrollment/enrollment");
 const Payroll = require("../../../models/Payroll/payroll");
 const WorkingHours = require("../../../models/Attendance/working_hours");
+const DailyPay = require("../../../models/Daily_Pay/daily_pay");
 
 const salary_calculator = async (req, res, next) =>{
     // number of weekends in current month
@@ -43,11 +44,14 @@ const salary_calculator = async (req, res, next) =>{
             if(error) throw error;
             else{
                 if(employee.length > 0) {
-                    let email = employee[0].email;
                     let empInfo = employee[0];
-                    let gross = employee[0].annual_gross;
+                    let Staff_ID = employee[0].staff_ID;
+                    let Employee_First_Name = employee[0].first_name;
+                    let Employee_Last_Name = employee[0].last_name;
+                    let email = employee[0].email;
                     // console.log(email+" "+gross);
                     // console.log(empInfo);
+
                     WorkingHours.aggregate([
                         {
                             // checking if emails match
@@ -56,7 +60,7 @@ const salary_calculator = async (req, res, next) =>{
                            }
                         },
                         {
-                            // suming up employees hours wokred
+                            // suming up employees hours worked
                             $group: {
                                 _id: "$email",
                                 total_hours: {
@@ -67,225 +71,49 @@ const salary_calculator = async (req, res, next) =>{
                                 }                     
                             } 
                         },
-                    ], (error, employee_hours_worked) => {
+                    ],  (error, employee_hours_worked) => {
                         if(error) throw error;
                         else {
                             if(employee_hours_worked.length > 0) {
                                 let hours_worked = employee_hours_worked[0].total_hours;
                                 let days_worked = employee_hours_worked[0].days_worked;
-                                let total_working_hours = 40 * 52;
+                                let total_working_hours = 40 * 52; // 40 = ideal working hours in a week 8 x 5 // 52 = number of weeks in a year
 
-                                if(gross < 30000) {
-                                    let netsalary_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    // .toFixed(2); two decimal points;
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": 0,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                } else if(gross >= 30000 && gross < 625000) {
-                                    let relief_allowance = 0.2;
-                                    
-                                    let statutory_relief = gross * relief_allowance + 200000;
-                                    let statutory_relief_perhour = parseFloat((((statutory_relief / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let statutory_relief_perhour_formatted = (statutory_relief_perhour).toLocaleString();
-                                    
-                                    let gross_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let gross_perhour_formatted = (gross_perhour).toLocaleString();
-
-                                    let taxable_income = gross - statutory_relief;
-                                    let taxable_income_perhour = parseFloat((((taxable_income / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let taxable_income_perhour_formatted = ((taxable_income_perhour).toLocaleString()).replace(/,/g,'');
-
-                                    let first_300 = taxable_income - 0;
-
-                                    let tax = first_300 * 0.07;
-                                    let tax_perhour =  parseFloat((((tax / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let tax_perhour_formatted = (tax_perhour).toLocaleString();
-
-                                    let netsalary = gross - tax;
-                                    let netsalary_perhour = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": tax_perhour_formatted,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                } else if(gross >= 625000 && gross < 1000000) {
-                                    let relief_allowance = 0.2;
-
-                                    let statutory_relief = gross * relief_allowance + 200000;
-                                    let statutory_relief_perhour = parseFloat((((statutory_relief / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let statutory_relief_perhour_formatted = (statutory_relief_perhour).toLocaleString();
-
-                                    let gross_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let gross_perhour_formatted = (gross_perhour).toLocaleString();
-
-                                    let taxable_income = gross - statutory_relief;
-                                    let taxable_income_perhour = parseFloat((((taxable_income / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let taxable_income_perhour_formatted = ((taxable_income_perhour).toLocaleString()).replace(/,/g,'');
-
-                                    let first_300 = 300000 * 0.07;
-                                    let next_300 = (taxable_income - 300000) * 0.11;
-
-                                    let tax = first_300 + next_300;
-                                    let tax_perhour =  parseFloat((((tax / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let tax_perhour_formatted = (tax_perhour).toLocaleString();
-
-                                    let netsalary = gross - tax;
-                                    let netsalary_perhour = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": tax_perhour_formatted,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                } else if(gross >= 1000000 && gross < 2250000) {
-                                    let relief_allowance = 0.2;
-
-                                    let statutory_relief = gross * relief_allowance + 200000;
-                                    let statutory_relief_perhour = parseFloat((((statutory_relief / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let statutory_relief_perhour_formatted = (statutory_relief_perhour).toLocaleString();
-
-                                    let gross_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let gross_perhour_formatted = (gross_perhour).toLocaleString();
-
-                                    let taxable_income = gross - statutory_relief;
-                                    let taxable_income_perhour = parseFloat((((taxable_income / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let taxable_income_perhour_formatted = ((taxable_income_perhour).toLocaleString()).replace(/,/g,'');
-
-                                    let first_300 = 300000 * 0.07;
-                                    let next_300 = 300000 * 0.11;
-                                    let next_500 = 500000 * 0.15;
-                                    let next_500_2 = (taxable_income - 1100000) * 0.19;
-                        
-                                    let tax = first_300 + next_300 + next_500 + next_500_2;
-                                    let tax_perhour =  parseFloat((((tax / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let tax_perhour_formatted = (tax_perhour).toLocaleString();
-
-                                    let netsalary = gross - tax;
-                                    let netsalary_perhour = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": tax_perhour_formatted,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                } else if(gross >= 2250000 && gross < 4250000) {
-                                    let relief_allowance = 0.2;
-
-                                    let statutory_relief = gross * relief_allowance + 200000;
-                                    let statutory_relief_perhour = parseFloat((((statutory_relief / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let statutory_relief_perhour_formatted = (statutory_relief_perhour).toLocaleString();
-
-                                    let gross_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let gross_perhour_formatted = (gross_perhour).toLocaleString();
-
-                                    let taxable_income = gross - statutory_relief;
-                                    let taxable_income_perhour = parseFloat((((taxable_income / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let taxable_income_perhour_formatted = ((taxable_income_perhour).toLocaleString()).replace(/,/g,'');
-
-                                    let first_300 = 300000 * 0.07;
-                                    let next_300 = 300000 * 0.11;
-                                    let next_500 = 500000 * 0.15;
-                                    let next_500_2 = 500000 * 0.19;
-                                    let next_1600 = (taxable_income - 1600000) * 0.21;
-                        
-                                    let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
-                                    let tax_perhour =  parseFloat((((tax / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let tax_perhour_formatted = (tax_perhour).toLocaleString();
-
-                                    let netsalary = gross - tax;
-                                    let netsalary_perhour = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": tax_perhour_formatted,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                } else if(gross >= 4250000) {
-                                    let relief_allowance = 0.2;
-
-                                    let statutory_relief = gross * relief_allowance + 200000;
-                                    let statutory_relief_perhour = parseFloat((((statutory_relief / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let statutory_relief_perhour_formatted = (statutory_relief_perhour).toLocaleString();
-                                    
-                                    let gross_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let gross_perhour_formatted = (gross_perhour).toLocaleString();
-
-                                    let taxable_income = gross - statutory_relief;
-
-                                    let taxable_income_perhour = parseFloat((((taxable_income / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    let taxable_income_perhour_formatted = ((taxable_income_perhour).toLocaleString()).replace(/,/g,'');
-
-                                    let first_300 = 300000 * 0.07;
-                                    let next_300 = 300000 * 0.11;
-                                    let next_500 = 500000 * 0.15;
-                                    let next_500_2 = 500000 * 0.19;
-                                    let next_1600 = 1600000 * 0.21;
-                                    let next_3200 = (taxable_income - 3200000) * 0.24;
-                        
-                                    let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
-                                    
-                                    let tax_perhour =  parseFloat((((tax / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let tax_perhour_formatted = (tax_perhour).toLocaleString();
-
-                                    let netsalary = gross - tax;
-                                    let netsalary_perhour = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                    let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                    res.status(200).json({
-                                        "Staff ID" : empInfo.staff_ID,
-                                        "First Name" : empInfo.first_name,
-                                        "Last Name" : empInfo.last_name,
-                                        "Employee Email": employee_hours_worked[0]._id,
-                                        "Position" : empInfo.position,
-                                        "Grade" : empInfo.grade,
-                                        "Days Worked": days_worked,
-                                        "Hours Worked": hours_worked,
-                                        "Tax (per hour)": tax_perhour_formatted,
-                                        "Net Salary (per hour)": netsalary_perhour_formatted
-                                    });
-                                }
+                                DailyPay.aggregate([
+                                    {
+                                        $match: {
+                                            email: email
+                                        }
+                                    },
+                                    {
+                                        $group: {
+                                            _id: "$email",
+                                            total_netsalary: {
+                                                $sum: "$net_salary.total_netsalary"
+                                            }
+                                        }
+                                    }
+                                ], (error, rs) => {
+                                    if(error) throw error
+                                    else {
+                                        const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                        const Net_Salary_Formatted = (Net_Salary).toLocaleString()
+                                        res.status(200).json({
+                                            "Staff ID" : Staff_ID,
+                                            "First Name" : Employee_First_Name,
+                                            "Last Name" : Employee_Last_Name,
+                                            "Employee Email": email,
+                                            "Position" : empInfo.position,
+                                            "Grade" : empInfo.grade,
+                                            "Days Worked": days_worked,
+                                            "Hours Worked": hours_worked,
+                                            "Net Salary (per worked day)": `${"NGN "+Net_Salary_Formatted}`
+                                        });
+                                    }
+                                });
                             } else {
                                 res.status(200).json({"Message": "Employee has no working hours"});
                             }
-                           
                         }
                     })
                 } else {

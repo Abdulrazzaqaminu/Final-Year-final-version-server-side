@@ -8,6 +8,7 @@ const AttendanceHistory = require("../../models/Attendance/attendanceHistory");
 const Entry = require("../../models/Attendance/entry");
 const Exit = require("../../models/Attendance/exit");
 const WorkingHours = require("../../models/Attendance/working_hours");
+const DailyPay = require("../../models/Daily_Pay/daily_pay");
 const qrcode = require("qrcode");
 
 const enrollEmployee = async (req, res, next) => {
@@ -44,7 +45,7 @@ const enrollEmployee = async (req, res, next) => {
                 staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
                 email: req.body.email, date_of_birth: req.body.date_of_birth, phone_number: req.body.phone_number,
                 department: req.body.department, unit: req.body.unit, position: req.body.position,
-                grade: req.body.grade, enrollment_date: req.body.enrollment_date, salary: Salary,
+                grade: req.body.grade, enrollment_date: req.body.enrollment_date, gross_salary: Salary,
                 address: {
                     state: req.body.address.state, 
                     city: req.body.address.city, 
@@ -330,7 +331,22 @@ const edit_employee = async (req, res, next) => {
                                                                                                                             (error, working_hours) => {
                                                                                                                                 if(error) throw error;
                                                                                                                                 else {
-                                                                                                                                    res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                    DailyPay.updateMany(
+                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                        {
+                                                                                                                                            first_name: req.body.first_name,
+                                                                                                                                            last_name: req.body.last_name,
+                                                                                                                                            position: req.body.position,
+                                                                                                                                            grade: req.body.grade,
+                                                                                                                                            gross_salary: Salary
+                                                                                                                                        },
+                                                                                                                                        (error, dailypay) => {
+                                                                                                                                            if(error) throw error;
+                                                                                                                                            else {
+                                                                                                                                                res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    );
                                                                                                                                 }
                                                                                                                             }
                                                                                                                         )
@@ -356,6 +372,7 @@ const edit_employee = async (req, res, next) => {
                                         }
                                     )
                                 } else {
+                                    // checking if department passed is valid
                                     Department.findOne({dept_name: req.body.department}, (error, department) => {
                                         if(error) throw error;
                                         else {
@@ -455,7 +472,22 @@ const edit_employee = async (req, res, next) => {
                                                                                                                                                                             (error, working_hours) => {
                                                                                                                                                                                 if(error) throw error;
                                                                                                                                                                                 else {
-                                                                                                                                                                                    res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                    DailyPay.updateMany(
+                                                                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                                                                        {
+                                                                                                                                                                                            first_name: req.body.first_name,
+                                                                                                                                                                                            last_name: req.body.last_name,
+                                                                                                                                                                                            position: req.body.position,
+                                                                                                                                                                                            grade: req.body.grade,
+                                                                                                                                                                                            gross_salary: Salary
+                                                                                                                                                                                        },
+                                                                                                                                                                                        (error, dailypay) => {
+                                                                                                                                                                                            if(error) throw error;
+                                                                                                                                                                                            else {
+                                                                                                                                                                                                res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    );
                                                                                                                                                                                 }
                                                                                                                                                                             }
                                                                                                                                                                         )
@@ -478,6 +510,7 @@ const edit_employee = async (req, res, next) => {
                                                                                                     }
                                                                                                 ) 
                                                                                             } else {
+                                                                                                // if unit is changed
                                                                                                 Unit.findOneAndUpdate(
                                                                                                     {employee_ids: Employee_ID},
                                                                                                     {
@@ -573,7 +606,22 @@ const edit_employee = async (req, res, next) => {
                                                                                                                                                                                                     (error, working_hours) => {
                                                                                                                                                                                                         if(error) throw error;
                                                                                                                                                                                                         else {
-                                                                                                                                                                                                            res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                                            DailyPay.updateMany(
+                                                                                                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                                                                                                {
+                                                                                                                                                                                                                    first_name: req.body.first_name,
+                                                                                                                                                                                                                    last_name: req.body.last_name,
+                                                                                                                                                                                                                    position: req.body.position,
+                                                                                                                                                                                                                    grade: req.body.grade,
+                                                                                                                                                                                                                    gross_salary: Salary
+                                                                                                                                                                                                                },
+                                                                                                                                                                                                                (error, dailypay) => {
+                                                                                                                                                                                                                    if(error) throw error;
+                                                                                                                                                                                                                    else {
+                                                                                                                                                                                                                        res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                            );
                                                                                                                                                                                                         }
                                                                                                                                                                                                     }
                                                                                                                                                                                                 )
@@ -605,7 +653,7 @@ const edit_employee = async (req, res, next) => {
                                                                                         }
                                                                                     })
                                                                                 } else {
-                                                                                    // if departement or unit are changed
+                                                                                    // if departement is changed
                                                                                     Department.findOneAndUpdate(
                                                                                         {employee_ids: Employee_ID},
                                                                                         {
@@ -626,6 +674,7 @@ const edit_employee = async (req, res, next) => {
                                                                                                     (error, unit) => {
                                                                                                         if(error) throw error;
                                                                                                         else {
+                                                                                                            // if unit is also changed
                                                                                                             Unit.findOneAndUpdate(
                                                                                                                 {employee_ids: Employee_ID},
                                                                                                                 {
@@ -721,7 +770,22 @@ const edit_employee = async (req, res, next) => {
                                                                                                                                                                                                                 (error, working_hours) => {
                                                                                                                                                                                                                     if(error) throw error;
                                                                                                                                                                                                                     else {
-                                                                                                                                                                                                                        res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                                                        DailyPay.updateMany(
+                                                                                                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                first_name: req.body.first_name,
+                                                                                                                                                                                                                                last_name: req.body.last_name,
+                                                                                                                                                                                                                                position: req.body.position,
+                                                                                                                                                                                                                                grade: req.body.grade,
+                                                                                                                                                                                                                                gross_salary: Salary
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            (error, dailypay) => {
+                                                                                                                                                                                                                                if(error) throw error;
+                                                                                                                                                                                                                                else {
+                                                                                                                                                                                                                                    res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                        );
                                                                                                                                                                                                                     }
                                                                                                                                                                                                                 }
                                                                                                                                                                                                             )
@@ -790,7 +854,7 @@ const edit_employee = async (req, res, next) => {
 const unenroll = async (req, res, next) => {
     const Employee_ID = req.params.employee_id;
     try {
-        Enrollment.findOne({_id: Employee_ID}, (error, employee) => {
+        Enrollment.findOne({_id: Employee_ID, status: "Active"}, (error, employee) => {
             if(error) throw error;
             else {
                 if(employee) {
@@ -833,9 +897,10 @@ const unenroll = async (req, res, next) => {
                                                                         employee_ids: Employee_ID
                                                                     }
                                                                 },
-                                                                (error, rs) => {
+                                                                async (error, rs) => {
                                                                     if(error) throw error;
                                                                     else {
+                                                                        await DailyPay.deleteMany({employee_ID: Employee_ID})
                                                                         res.status(200).json({"Message": "Employee has been terminated"});
                                                                     }
                                                                 }
@@ -859,9 +924,10 @@ const unenroll = async (req, res, next) => {
                                                                     else {
                                                                         Hod.findOneAndDelete(
                                                                             {employee_id: Employee_ID}, 
-                                                                            (error, rs) => {
+                                                                            async (error, rs) => {
                                                                                 if(error) throw error;
                                                                                 else {
+                                                                                    await DailyPay.deleteMany({employee_ID: Employee_ID})
                                                                                     res.status(200).json({"Message": "Employee has been terminated"});
                                                                                 }
                                                                             }

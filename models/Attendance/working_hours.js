@@ -33,7 +33,7 @@ const WorkingHoursSchema = mongoose.Schema({
         type: Number,
         required: true
     }
-})
+}, {timestamps: true} )
 
 const WorkingHours = mongoose.model("working_hours", WorkingHoursSchema);
 module.exports = WorkingHours;
