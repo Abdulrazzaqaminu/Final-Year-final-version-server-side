@@ -57,6 +57,10 @@ const EnrollmentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    employee_type: {
+        type: String,
+        required: true,
+    },
     address: {
         state: {
             type: String,

@@ -46,6 +46,7 @@ const enrollEmployee = async (req, res, next) => {
                 email: req.body.email, date_of_birth: req.body.date_of_birth, phone_number: req.body.phone_number,
                 department: req.body.department, unit: req.body.unit, position: req.body.position,
                 grade: req.body.grade, enrollment_date: req.body.enrollment_date, gross_salary: Salary,
+                employee_type: req.body.employee_type,
                 address: {
                     state: req.body.address.state, 
                     city: req.body.address.city, 
@@ -80,7 +81,7 @@ const enrollEmployee = async (req, res, next) => {
                                                                     else {
                                                                         if(rs.length > 0) {
                                                                             const Department_ID = rs[0].dept_id;
-                                                                            console.log(Department_ID);
+                                                                            // console.log(Department_ID);
                                                                             Department.findOne({_id: Department_ID, dept_name: req.body.department}, async (error, rs) => {
                                                                                 if(error) throw error;
                                                                                 else {
