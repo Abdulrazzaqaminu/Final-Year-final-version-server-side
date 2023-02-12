@@ -18,6 +18,10 @@ const PayrollSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    employee_type: {
+        type: String,
+        required: true
+    },
     enrollment_date: {
         type: String,
         required: true

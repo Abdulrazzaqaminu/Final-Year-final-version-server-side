@@ -138,634 +138,299 @@ const recordAttendance = async (req, res, next) => {
                                                                                                         if(error) throw error;
                                                                                                         else {
                                                                                                             let hour_perday = hours.hours;
-                                                                                                            console.log("hours worked = "+hour_perday);
+                                                                                                            // console.log("hours worked = "+hour_perday);
                                                                                                             // checking employee type to know how to calculate salary
                                                                                                             if(Employee_Type === "Full-Time"){
-                                                                                                                // Employee with overtime
-                                                                                                                if(hour_perday > 8) {
-                                                                                                                    let Extra_hours = hour_perday - 8;
-                                                                                                                    console.log("working hours perday = 8")
-                                                                                                                    console.log(`${"additional hours = "+Extra_hours}`);
-                                                                                                                    if(gross < 30000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-    
-                                                                                                                        let netsalary_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // .toFixed(2); two decimal points;
-    
-                                                                                                                        let netsalary_perday = parseFloat((((gross * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat((((netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-    
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 30000 && gross < 625000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                                                                        
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief;
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let first_300 = taxable_income - 0;
-                                                                                    
-                                                                                                                        let tax = first_300 * 0.07;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // console.log(netsalary_perhour_formatted+" hourly rate");
-    
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat(((( netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-                                                                            
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 625000 && gross < 1000000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                                                                        
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief;
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-    
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = (taxable_income - 300000) * 0.11;
-    
-                                                                                                                        let tax = first_300 + next_300;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // console.log(netsalary_perhour_formatted+" hourly rate");
-    
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat(((( netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-                                                                            
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 1000000 && gross < 2250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                                                                        
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief;
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-    
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = (taxable_income - 1100000) * 0.19;
-                                                                                                            
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // console.log(netsalary_perhour_formatted+" hourly rate");
-    
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat(((( netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-                                                                            
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 2250000 && gross < 4250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                                                                        
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief;
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString(); 
-    
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = 500000 * 0.19;
-                                                                                                                        let next_1600 = (taxable_income - 1600000) * 0.21;
-                                                                                                            
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // console.log(netsalary_perhour_formatted+" hourly rate");
-    
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat(((( netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-                                                                            
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 4250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                                                                        
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief;
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString(); 
-    
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = 500000 * 0.19;
-                                                                                                                        let next_1600 = 1600000 * 0.21;
-                                                                                                                        let next_3200 = (taxable_income - 3200000) * 0.24;
-                                                                                                            
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        // console.log(netsalary_perhour_formatted+" hourly rate");
-    
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-    
-                                                                                                                        let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
-    
-                                                                                                                        let total_netsalary = parseFloat(((( netsalary_perday + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
-                                                                            
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross,
-                                                                                                                        hours_worked: {
-                                                                                                                            hours: hour_perday,
-                                                                                                                            overtime: "Worked Overtime",
-                                                                                                                            addition_hours: Extra_hours
-                                                                                                                        }, date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            overtime_pay: overtime_pay,
-                                                                                                                            total_netsalary: total_netsalary
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
+                                                                                                                if(gross < 30000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+
+                                                                                                                    let netsalary_perday = parseFloat((((gross * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
+
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
                                                                                                                     }
+
+                                                                                                                } else if(gross >= 30000 && gross < 625000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+                                                                                                                    let relief_allowance = 0.2;
                                                                                                                     
-                                                                                                                    // Employee has no overtime
-                                                                                                                } else {
-                                                                                                                    if(gross < 30000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-
-                                                                                                                        let netsalary_perday = parseFloat((((gross * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
-
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 30000 && gross < 625000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                    
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-                                                                                                            
-                                                                                                                        let first_300 = taxable_income - 0;
-                                                                                                            
-                                                                                                                        let tax = first_300 * 0.07;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-                                                                    
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
+                                                                                                                    let statutory_relief = gross * relief_allowance + 200000;
+                                                                                                                    let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
                                                                 
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 625000 && gross < 1000000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                    
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = (taxable_income - 300000) * 0.11;
-
-                                                                                                                        let tax = first_300 + next_300;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
+                                                                                                                    let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
+                                                                                                                    let gross_perday_formatted = (gross_perday).toLocaleString();
                                                                 
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 1000000 && gross < 2250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                    
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = (taxable_income - 1100000) * 0.19;
-
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
+                                                                                                                    let taxable_income = gross - statutory_relief
+                                                                                                                    let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
+                                                                                                        
+                                                                                                                    let first_300 = taxable_income - 0;
+                                                                                                        
+                                                                                                                    let tax = first_300 * 0.07;
+                                                                                                                    let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let tax_perday_formatted  = (tax_perday).toLocaleString();
                                                                 
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 2250000 && gross < 4250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                    
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
+                                                                                                                    let netsalary = gross - tax;
+                                                                                                                    let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
 
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = 500000 * 0.19;
-                                                                                                                        let next_1600 = (taxable_income - 1600000) * 0.21;
-                                                                                                            
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+                                                            
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
+                                                                                                                    }
 
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
+                                                                                                                } else if(gross >= 625000 && gross < 1000000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+                                                                                                                    let relief_allowance = 0.2;
+                                                                                                                    
+                                                                                                                    let statutory_relief = gross * relief_allowance + 200000;
+                                                                                                                    let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
                                                                 
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
-                                                                                                                    } else if(gross >= 4250000) {
-                                                                                                                        let number_of_days_worked = days_worked / 252;
-                                                                                                                        let relief_allowance = 0.2;
-                                                                                                                        
-                                                                                                                        let statutory_relief = gross * relief_allowance + 200000;
-                                                                                                                        let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
-                                                                    
-                                                                                                                        let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
-                                                                                                                        let gross_perday_formatted = (gross_perday).toLocaleString();
-                                                                    
-                                                                                                                        let taxable_income = gross - statutory_relief
-                                                                                                                        let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
-
-                                                                                                                        let first_300 = 300000 * 0.07;
-                                                                                                                        let next_300 = 300000 * 0.11;
-                                                                                                                        let next_500 = 500000 * 0.15;
-                                                                                                                        let next_500_2 = 500000 * 0.19;
-                                                                                                                        let next_1600 = 1600000 * 0.21;
-                                                                                                                        let next_3200 = (taxable_income - 3200000) * 0.24;
-                                                                                                            
-                                                                                                                        let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
-                                                                                                                        let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let tax_perday_formatted  = (tax_perday).toLocaleString();
-
-                                                                                                                        let netsalary = gross - tax;
-                                                                                                                        let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
-                                                                                                                        console.log("Net salary per working days = "+netsalary_perday_formatted+" days worked = "+days_worked);
+                                                                                                                    let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
+                                                                                                                    let gross_perday_formatted = (gross_perday).toLocaleString();
                                                                 
-                                                                                                                        const newDailyPay = new DailyPay({staff_ID: Staff_ID,
-                                                                                                                        employee_ID: Employee_ID, first_name: Employee_First_Name,
-                                                                                                                        last_name: Employee_Last_Name, email: email, position: Employee_Position,
-                                                                                                                        grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
-                                                                                                                        date: checkout_date, 
-                                                                                                                        net_salary:{
-                                                                                                                            days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
-                                                                                                                            total_netsalary: netsalary_perday
-                                                                                                                        }});
-                                                                            
-                                                                                                                        try {
-                                                                                                                            await newDailyPay.save();
-                                                                                                                        } catch (error) {
-                                                                                                                            next(error);
-                                                                                                                        }
+                                                                                                                    let taxable_income = gross - statutory_relief
+                                                                                                                    let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
 
+                                                                                                                    let first_300 = 300000 * 0.07;
+                                                                                                                    let next_300 = (taxable_income - 300000) * 0.11;
+
+                                                                                                                    let tax = first_300 + next_300;
+                                                                                                                    let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let tax_perday_formatted  = (tax_perday).toLocaleString();
+
+                                                                                                                    let netsalary = gross - tax;
+                                                                                                                    let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
+
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+                                                            
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
+                                                                                                                    }
+
+                                                                                                                } else if(gross >= 1000000 && gross < 2250000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+                                                                                                                    let relief_allowance = 0.2;
+                                                                                                                    
+                                                                                                                    let statutory_relief = gross * relief_allowance + 200000;
+                                                                                                                    let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
+                                                                
+                                                                                                                    let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
+                                                                                                                    let gross_perday_formatted = (gross_perday).toLocaleString();
+                                                                
+                                                                                                                    let taxable_income = gross - statutory_relief
+                                                                                                                    let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
+
+                                                                                                                    let first_300 = 300000 * 0.07;
+                                                                                                                    let next_300 = 300000 * 0.11;
+                                                                                                                    let next_500 = 500000 * 0.15;
+                                                                                                                    let next_500_2 = (taxable_income - 1100000) * 0.19;
+
+                                                                                                                    let tax = first_300 + next_300 + next_500 + next_500_2;
+                                                                                                                    let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let tax_perday_formatted  = (tax_perday).toLocaleString();
+
+                                                                                                                    let netsalary = gross - tax;
+                                                                                                                    let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
+
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
+                                                                                                                    }
+
+                                                                                                                } else if(gross >= 2250000 && gross < 4250000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+                                                                                                                    let relief_allowance = 0.2;
+                                                                                                                    
+                                                                                                                    let statutory_relief = gross * relief_allowance + 200000;
+                                                                                                                    let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
+                                                                
+                                                                                                                    let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
+                                                                                                                    let gross_perday_formatted = (gross_perday).toLocaleString();
+                                                                
+                                                                                                                    let taxable_income = gross - statutory_relief
+                                                                                                                    let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
+
+                                                                                                                    let first_300 = 300000 * 0.07;
+                                                                                                                    let next_300 = 300000 * 0.11;
+                                                                                                                    let next_500 = 500000 * 0.15;
+                                                                                                                    let next_500_2 = 500000 * 0.19;
+                                                                                                                    let next_1600 = (taxable_income - 1600000) * 0.21;
+                                                                                                        
+                                                                                                                    let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
+                                                                                                                    let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let tax_perday_formatted  = (tax_perday).toLocaleString();
+
+                                                                                                                    let netsalary = gross - tax;
+                                                                                                                    let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
+
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+                                                            
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
+                                                                                                                    }
+
+                                                                                                                } else if(gross >= 4250000) {
+                                                                                                                    let number_of_days_worked = days_worked / 252;
+                                                                                                                    let relief_allowance = 0.2;
+                                                                                                                    
+                                                                                                                    let statutory_relief = gross * relief_allowance + 200000;
+                                                                                                                    let statutory_relief_perday = parseFloat(((((statutory_relief) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let statutory_relief_perday_formatted = (statutory_relief_perday).toLocaleString();
+                                                                
+                                                                                                                    let gross_perday = parseFloat(((((gross * number_of_days_worked).toFixed(2)).toLocaleString())).replace(/,/g,''))
+                                                                                                                    let gross_perday_formatted = (gross_perday).toLocaleString();
+                                                                
+                                                                                                                    let taxable_income = gross - statutory_relief
+                                                                                                                    let taxable_income_perday = parseFloat(((((taxable_income) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let taxable_income_perday_formatted = (taxable_income_perday).toLocaleString();
+
+                                                                                                                    let first_300 = 300000 * 0.07;
+                                                                                                                    let next_300 = 300000 * 0.11;
+                                                                                                                    let next_500 = 500000 * 0.15;
+                                                                                                                    let next_500_2 = 500000 * 0.19;
+                                                                                                                    let next_1600 = 1600000 * 0.21;
+                                                                                                                    let next_3200 = (taxable_income - 3200000) * 0.24;
+                                                                                                        
+                                                                                                                    let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
+                                                                                                                    let tax_perday  = parseFloat(((((tax) * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let tax_perday_formatted  = (tax_perday).toLocaleString();
+
+                                                                                                                    let netsalary = gross - tax;
+                                                                                                                    let netsalary_perday = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                    let netsalary_perday_formatted = (netsalary_perday).toLocaleString();
+
+                                                                                                                    console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                    console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                    console.log(`Email = ${email} netsalary per days worked = ${netsalary_perday_formatted}\n`);
+                                                            
+                                                                                                                    const newDailyPay = new DailyPay({staff_ID: Staff_ID,
+                                                                                                                    employee_ID: Employee_ID, first_name: Employee_First_Name,
+                                                                                                                    last_name: Employee_Last_Name, email: email, position: Employee_Position,
+                                                                                                                    grade: Employee_Grade, gross_salary: gross, hours_worked:{hours: hour_perday}, 
+                                                                                                                    date: checkout_date, 
+                                                                                                                    net_salary:{
+                                                                                                                        days_worked: days_worked,
+                                                                                                                        total_netsalary: netsalary_perday
+                                                                                                                    }});
+                                                                        
+                                                                                                                    try {
+                                                                                                                        await newDailyPay.save();
+                                                                                                                    } catch (error) {
+                                                                                                                        next(error);
                                                                                                                     }
                                                                                                                 }
+                                                                                                                // 
                                                                                                             } else if(Employee_Type !== "Full-Time"){
                                                                                                                 // Not a full time emplpoyee
                                                                                                                 // Employee has overtime
                                                                                                                 if(hour_perday > 8) {
                                                                                                                     let Extra_hours = hour_perday - 8;
-                                                                                                                    console.log("Working hours perday = 8")
-                                                                                                                    console.log(`${"Additional hours = "+Extra_hours}`);
+                                                                                                                    // console.log("Working hours perday = 8")
+                                                                                                                    // console.log(`${"Additional hours = "+Extra_hours}`);
                                                                                                                     if(gross < 30000) {
-                                                                                                                        let netsalary_perhour = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhour = parseFloat((((gross / total_working_hours * 1).toFixed(2)).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
                                                                                                                         // .toFixed(2); two decimal points;
 
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhour + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per working days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -778,7 +443,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -812,19 +476,20 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let netsalary = gross - tax;
                                                                                                                         let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        console.log("Hourly rate = "+netsalary_perhour_formatted);
 
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perhours_worked_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhours_worked + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per worked days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -837,7 +502,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perday,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -872,19 +536,20 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let netsalary = gross - tax;
                                                                                                                         let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        console.log("Hourly rate = "+netsalary_perhour_formatted);
 
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perhours_worked_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhours_worked + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per worked days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -897,7 +562,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perhours_worked,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -934,19 +598,20 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let netsalary = gross - tax;
                                                                                                                         let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        console.log("Hourly rate = "+netsalary_perhour_formatted);
 
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perhours_worked_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhours_worked + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per worked days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -959,7 +624,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perhours_worked,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -997,19 +661,20 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let netsalary = gross - tax;
                                                                                                                         let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        console.log("Hourly rate = "+netsalary_perhour_formatted);
 
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perhours_worked_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhours_worked + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per worked days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1022,7 +687,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perhours_worked,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -1061,19 +725,20 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let netsalary = gross - tax;
                                                                                                                         let netsalary_perhour = parseFloat((((netsalary / total_working_hours * 1)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhour_formatted = (netsalary_perhour).toLocaleString();
-                                                                                                                        console.log("Hourly rate = "+netsalary_perhour_formatted);
 
                                                                                                                         let overtime_pay = parseFloat((((netsalary_perhour * 1.5 * Extra_hours)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let overtime_pay_formatted = (overtime_pay).toLocaleString();
-                                                                                                                        console.log("Net overtime pay = "+overtime_pay_formatted);
 
                                                                                                                         let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perhours_worked_formatted);
 
                                                                                                                         let total_netsalary = parseFloat((((netsalary_perhours_worked + overtime_pay)).toFixed(2).toLocaleString()).replace(/,/g,''));
                                                                                                                         let total_netsalary_formatted = (total_netsalary).toLocaleString();
-                                                                                                                        console.log("Net salary per worked days plus overtime = "+total_netsalary_formatted);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}\nEmail = ${email} hourly rate = ${netsalary_perhour_formatted}`);
+                                                                                                                        console.log(`Email = ${email} extra hours worked = ${Extra_hours}\nEmail = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}`);
+                                                                                                                        console.log(`Email = ${email} overtime pay = ${overtime_pay_formatted}\nEmail = ${email} netsalary per total hours worked + overtime pay = ${total_netsalary_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1086,7 +751,6 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         }, date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perhours_worked,
                                                                                                                             overtime_pay: overtime_pay,
                                                                                                                             total_netsalary: total_netsalary
                                                                                                                         }});
@@ -1101,10 +765,13 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                     // Employee has no overtime
                                                                                                                 } else {
                                                                                                                     if(gross < 30000) {
-                                                                                                                        let netsalary_perwroked_hours = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perwroked_hours_formatted = (netsalary_perwroked_hours).toLocaleString();
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((gross / total_working_hours * hours_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
                                                                                                                         // .toFixed(2); two decimal points;
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perwroked_hours_formatted+" days worked = "+days_worked);
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1113,8 +780,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perwroked_hours,
-                                                                                                                            total_netsalary: netsalary_perwroked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1144,9 +810,12 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let tax_perhour_formatted = (tax_perhour).toLocaleString();
 
                                                                                                                         let netsalary = gross - tax;
-                                                                                                                        let netsalary_perworked_hours = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perworked_hours_formatted = (netsalary_perworked_hours).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perworked_hours_formatted+" days worked = "+days_worked);
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1155,8 +824,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perworked_hours,
-                                                                                                                            total_netsalary: netsalary_perworked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1187,9 +855,12 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let tax_perhour_formatted = (tax_perhour).toLocaleString();
 
                                                                                                                         let netsalary = gross - tax;
-                                                                                                                        let netsalary_perworked_hours = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perworked_hours_formatted = (netsalary_perworked_hours).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perworked_hours_formatted+" days worked = "+days_worked);
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1198,8 +869,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perworked_hours,
-                                                                                                                            total_netsalary: netsalary_perworked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1232,9 +902,12 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let tax_perhour_formatted = (tax_perhour).toLocaleString();
 
                                                                                                                         let netsalary = gross - tax;
-                                                                                                                        let netsalary_perworked_hours = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perworked_hours_formatted = (netsalary_perworked_hours).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perworked_hours_formatted+" days worked = "+days_worked);
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1243,8 +916,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perworked_hours,
-                                                                                                                            total_netsalary: netsalary_perworked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1278,9 +950,12 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let tax_perhour_formatted = (tax_perhour).toLocaleString();
 
                                                                                                                         let netsalary = gross - tax;
-                                                                                                                        let netsalary_perworked_hours = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perworked_hours_formatted = (netsalary_perworked_hours).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perworked_hours_formatted+" days worked = "+days_worked);
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1289,8 +964,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perworked_hours,
-                                                                                                                            total_netsalary: netsalary_perworked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1327,9 +1001,12 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         let tax_perhour_formatted = (tax_perhour).toLocaleString();
 
                                                                                                                         let netsalary = gross - tax;
-                                                                                                                        let netsalary_perworked_hours = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
-                                                                                                                        let netsalary_perworked_hours_formatted = (netsalary_perworked_hours).toLocaleString();
-                                                                                                                        console.log("Net salary per worked hours = "+netsalary_perworked_hours_formatted+" days worked = "+days_worked);
+                                                                                                                        let netsalary_perhours_worked = parseFloat((((netsalary / total_working_hours * hours_worked)).toFixed(2).toLocaleString()).replace(/,/g,''));
+                                                                                                                        let netsalary_perhours_worked_formatted = (netsalary_perhours_worked).toLocaleString();
+
+                                                                                                                        console.log(`Email = ${email}\nPosition = ${Employee_Position}\nGrade = ${Employee_Grade}\nEmployee type = ${Employee_Type}`);
+                                                                                                                        console.log(`Email = ${email} hours worked = ${hour_perday} (today)\nEmail = ${email} total working hours of = ${hours_worked}\nEmail = ${email} days worked = ${days_worked}`);
+                                                                                                                        console.log(`Email = ${email} netsalary per total hours worked = ${netsalary_perhours_worked_formatted}\n`);
 
                                                                                                                         const newDailyPay = new DailyPay({staff_ID: Staff_ID,
                                                                                                                         employee_ID: Employee_ID, first_name: Employee_First_Name,
@@ -1338,8 +1015,7 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                         date: checkout_date, 
                                                                                                                         net_salary:{
                                                                                                                             days_worked: days_worked,
-                                                                                                                            netsalary_perworked_days: netsalary_perworked_hours,
-                                                                                                                            total_netsalary: netsalary_perworked_hours
+                                                                                                                            total_netsalary: netsalary_perhours_worked
                                                                                                                         }});
                                                                             
                                                                                                                         try {
@@ -1352,25 +1028,30 @@ const recordAttendance = async (req, res, next) => {
                                                                                                                 }
                                                                                                             }
                                                                                                         }
-                                                                                                    }).sort({createdAt: -1})
+                                                                                                    }).sort({createdAt: -1});
+                                                                                                    // Wroking hours find one end
                                                                                                 } else {
                                                                                                     res.status(200).json({"Message": "Employee has no working hours"});
                                                                                                 }
                                                                                             }
                                                                                         });
+                                                                                        // Working hours with aggregate end
                                                                                     }
                                                                                 }
-                                                                            })
+                                                                            });
+                                                                            // Payroll end
                                                                         } catch (error) {
                                                                             next(error);
                                                                         }
                                                                     }
-                                                                }).sort({date: -1, in_time: -1, email: -1})
+                                                                }).sort({date: -1, in_time: -1, email: -1});
+                                                                // Attendance history end
                                                             } catch (error) {
                                                                 next(error);
                                                             }
                                                         }
-                                                    }).sort({date: -1, out_time: -1, email: -1})
+                                                    }).sort({date: -1, out_time: -1, email: -1});
+                                                    // Exit end
                                                 } catch (error) {
                                                     next(error);
                                                 }
@@ -1382,7 +1063,8 @@ const recordAttendance = async (req, res, next) => {
                                             next(error);
                                         }
                                     } 
-                                })
+                                });
+                                // Entry with delete end
                             } else {       
                                 try {
                                     Exit.find({email: req.body.email}, async (error, result) => { 
@@ -1425,13 +1107,15 @@ const recordAttendance = async (req, res, next) => {
                             }
                         }
                         res.status(200).json({"Message" : "Attendance recorded"});
-                    })
+                    });
+                    // Entry end
                 }
                 else{
                     res.status(404).json({"Message": "Invalid employee email or staff ID"});
                 }
             }
-        })
+        });
+        // Enrollment end
     } catch (error) {
         next(error);
     }

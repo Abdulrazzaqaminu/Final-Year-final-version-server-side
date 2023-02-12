@@ -45,8 +45,8 @@ const enrollEmployee = async (req, res, next) => {
                 staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
                 email: req.body.email, date_of_birth: req.body.date_of_birth, phone_number: req.body.phone_number,
                 department: req.body.department, unit: req.body.unit, position: req.body.position,
-                grade: req.body.grade, enrollment_date: req.body.enrollment_date, gross_salary: Salary,
-                employee_type: req.body.employee_type,
+                grade: req.body.grade, employee_type: req.body.employee_type, enrollment_date: req.body.enrollment_date, 
+                gross_salary: Salary,
                 address: {
                     state: req.body.address.state, 
                     city: req.body.address.city, 
@@ -90,7 +90,8 @@ const enrollEmployee = async (req, res, next) => {
                                                                                         try {
                                                                                             const employeePayroll = new Payroll({
                                                                                                 staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
-                                                                                                email: req.body.email, enrollment_date: req.body.enrollment_date, employee_id: newEmployee._id, 
+                                                                                                email: req.body.email, employee_type: req.body.employee_type, 
+                                                                                                enrollment_date: req.body.enrollment_date, employee_id: newEmployee._id, 
                                                                                                 annual_gross: Salary
                                                                                             });
                                                                                             await employeePayroll.save();

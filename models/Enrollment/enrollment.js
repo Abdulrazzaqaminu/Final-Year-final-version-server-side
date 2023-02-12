@@ -49,6 +49,10 @@ const EnrollmentSchema = new mongoose.Schema({
         min: 1,
         max: 3,
     },
+    employee_type: {
+        type: String,
+        required: true,
+    },
     enrollment_date: {
         type: String,
         required: true
@@ -56,10 +60,6 @@ const EnrollmentSchema = new mongoose.Schema({
     gross_salary:{
         type: Number,
         required: true
-    },
-    employee_type: {
-        type: String,
-        required: true,
     },
     address: {
         state: {

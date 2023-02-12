@@ -61,10 +61,6 @@ const DailyPaySchema = new mongoose.Schema({
             type: Number,
             required: true
         },
-        netsalary_perworked_days: {
-            type: Number,
-            required: true
-        },
         overtime_pay: {
             type: Number,
             default: 0

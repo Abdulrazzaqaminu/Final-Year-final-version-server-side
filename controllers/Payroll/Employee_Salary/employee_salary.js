@@ -48,6 +48,7 @@ const salary_calculator = async (req, res, next) =>{
                     let Staff_ID = employee[0].staff_ID;
                     let Employee_First_Name = employee[0].first_name;
                     let Employee_Last_Name = employee[0].last_name;
+                    let Employee_Type = employee[0].employee_type;
                     let email = employee[0].email;
                     // console.log(email+" "+gross);
                     // console.log(empInfo);
@@ -97,18 +98,34 @@ const salary_calculator = async (req, res, next) =>{
                                     if(error) throw error
                                     else {
                                         const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                        const Net_Salary_Formatted = (Net_Salary).toLocaleString()
-                                        res.status(200).json({
-                                            "Staff ID" : Staff_ID,
-                                            "First Name" : Employee_First_Name,
-                                            "Last Name" : Employee_Last_Name,
-                                            "Employee Email": email,
-                                            "Position" : empInfo.position,
-                                            "Grade" : empInfo.grade,
-                                            "Days Worked": days_worked,
-                                            "Hours Worked": hours_worked,
-                                            "Net Salary (per worked day)": `${"NGN "+Net_Salary_Formatted}`
-                                        });
+                                        const Net_Salary_Formatted = (Net_Salary).toLocaleString();
+                                        if(Employee_Type === "Full-Time") {
+                                            res.status(200).json({
+                                                "Staff ID" : Staff_ID,
+                                                "First Name" : Employee_First_Name,
+                                                "Last Name" : Employee_Last_Name,
+                                                "Employee Email": email,
+                                                "Position" : empInfo.position,
+                                                "Grade" : empInfo.grade,
+                                                "Employee Type": Employee_Type,
+                                                "Days Worked": days_worked,
+                                                "Hours Worked": hours_worked,
+                                                "Net Salary (per total days worked)": `${"NGN "+Net_Salary_Formatted}`
+                                            });
+                                        } else {
+                                            res.status(200).json({
+                                                "Staff ID" : Staff_ID,
+                                                "First Name" : Employee_First_Name,
+                                                "Last Name" : Employee_Last_Name,
+                                                "Employee Email": email,
+                                                "Position" : empInfo.position,
+                                                "Grade" : empInfo.grade,
+                                                "Employee Type": Employee_Type,
+                                                "Days Worked": days_worked,
+                                                "Hours Worked": hours_worked,
+                                                "Net Salary (per total hours worked)": `${"NGN "+Net_Salary_Formatted}`
+                                            });
+                                        }
                                     }
                                 });
                             } else {
