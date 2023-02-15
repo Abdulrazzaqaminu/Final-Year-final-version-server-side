@@ -39,7 +39,7 @@ const DailyPaySchema = new mongoose.Schema({
         required: true
     },
     hours_worked: {
-        hours: {
+        worked_hours: {
             type: Number,
             required: true
         },
@@ -47,7 +47,7 @@ const DailyPaySchema = new mongoose.Schema({
             type: String,
             default: "No Overtime"
         },
-        addition_hours: {
+        extra_hours: {
             type: Number,
             default: 0
         }
@@ -65,7 +65,7 @@ const DailyPaySchema = new mongoose.Schema({
             type: Number,
             default: 0
         },
-        total_netsalary: {
+        netsalary: {
             type: Number,
             required: true
         }

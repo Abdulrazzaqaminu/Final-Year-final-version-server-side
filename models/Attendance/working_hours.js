@@ -22,8 +22,14 @@ const WorkingHoursSchema = mongoose.Schema({
         required: true
     },
     hours: {
-        type: Number,
-        required: true
+        worked_hours: {
+            type: Number,
+            required: true
+        },
+        extra_hours: {
+            type: Number,
+            default: 0
+        }
     },
     minutes: {
         type: Number,

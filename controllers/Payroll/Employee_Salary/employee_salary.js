@@ -65,20 +65,19 @@ const salary_calculator = async (req, res, next) =>{
                             $group: {
                                 _id: "$email",
                                 total_hours: {
-                                    $sum: "$hours"
+                                    $sum: "$hours.worked_hours"
                                 }, 
                                 days_worked: {
                                     $sum: 1
                                 }                     
                             } 
                         },
-                    ],  (error, employee_hours_worked) => {
+                    ],  (error, employee_worked_hours) => {
                         if(error) throw error;
                         else {
-                            if(employee_hours_worked.length > 0) {
-                                let hours_worked = employee_hours_worked[0].total_hours;
-                                let days_worked = employee_hours_worked[0].days_worked;
-                                let total_working_hours = 40 * 52; // 40 = ideal working hours in a week 8 x 5 // 52 = number of weeks in a year
+                            if(employee_worked_hours.length > 0) {
+                                let total_hours_worked = employee_worked_hours[0].total_hours;
+                                let total_worked_days = employee_worked_hours[0].days_worked;
 
                                 DailyPay.aggregate([
                                     {
@@ -90,7 +89,7 @@ const salary_calculator = async (req, res, next) =>{
                                         $group: {
                                             _id: "$email",
                                             total_netsalary: {
-                                                $sum: "$net_salary.total_netsalary"
+                                                $sum: "$net_salary.netsalary"
                                             }
                                         }
                                     }
@@ -108,8 +107,8 @@ const salary_calculator = async (req, res, next) =>{
                                                 "Position" : empInfo.position,
                                                 "Grade" : empInfo.grade,
                                                 "Employee Type": Employee_Type,
-                                                "Days Worked": days_worked,
-                                                "Hours Worked": hours_worked,
+                                                "Days Worked": total_worked_days,
+                                                "Hours Worked": total_hours_worked,
                                                 "Net Salary (per total days worked)": `${"NGN "+Net_Salary_Formatted}`
                                             });
                                         } else {
@@ -121,8 +120,8 @@ const salary_calculator = async (req, res, next) =>{
                                                 "Position" : empInfo.position,
                                                 "Grade" : empInfo.grade,
                                                 "Employee Type": Employee_Type,
-                                                "Days Worked": days_worked,
-                                                "Hours Worked": hours_worked,
+                                                "Days Worked": total_worked_days,
+                                                "Hours Worked": total_hours_worked,
                                                 "Net Salary (per total hours worked)": `${"NGN "+Net_Salary_Formatted}`
                                             });
                                         }

@@ -41,7 +41,7 @@ const PayrollSchema = new mongoose.Schema({
         type: Number,
         required: true
     }
-})
+}, {timestamps: true})
 
 const Payroll = mongoose.model("Payroll", PayrollSchema);
 module.exports = Payroll;
