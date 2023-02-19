@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 // const cors = require("cors");
 const app = express();
 
@@ -17,6 +18,7 @@ const reportAttendanceRoute = require("./routes/Attendance/Report/attendanceRepo
 const loansRoute = require("./routes/Loans/loans");
 const payrollRoute = require("./routes/Payroll/payroll");
 const employeeSalaryRoute = require("./routes/Payroll/Employee_Salary/employee_salary");
+const adminLoginRoute = require("./routes/Login/login");
 
 // Environmental variables
 const PORT = process.env.PORT;
@@ -43,11 +45,18 @@ DB.on("connected", () => {
 
 // middlewares
 app.use(express.urlencoded({extended: true}));
+app.use(cookieParser());
 app.use(express.json());
 // app.use(cors());
-app.use((req, res, next) => {
-    console.log(req.method, req.path);
-    next();
+app.use((error, req, res, next) => {
+    const errorStatus = error.status || 500;
+    const errorrMessage = error.message || "Something went wrong";
+    return res.status(errorStatus).json({
+        success: false,
+        status: errorStatus,
+        message: errorrMessage,
+        stack: error.stack
+    });
 });
 // routes
 app.use("/api/dashboard", dashboardRoute);
@@ -61,6 +70,7 @@ app.use("/api/attendance/attendance_report", reportAttendanceRoute);
 app.use("/api/loans", loansRoute);
 app.use("/api/payroll", payrollRoute);
 app.use("/api/payroll", employeeSalaryRoute);
+app.use("/api/login", adminLoginRoute);
 
 app.listen(PORT, () => {
     connection();
