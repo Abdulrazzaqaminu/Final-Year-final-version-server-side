@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-// const cors = require("cors");
+const cors = require("cors");
 const app = express();
 
 // requiring routes
@@ -43,11 +43,16 @@ DB.on("connected", () => {
     console.log("MongoDB Connected!");
 });
 
+var corsOptions = {
+    origin: "http://localhost:3000",
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
 // middlewares
+app.use(cors(corsOptions));
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(express.json());
-// app.use(cors());
 app.use((error, req, res, next) => {
     const errorStatus = error.status || 500;
     const errorrMessage = error.message || "Something went wrong";

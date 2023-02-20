@@ -7,7 +7,7 @@ const {
     clearLoan } = require("../../controllers/Loans/loans");
 
 // loan payment
-router.post("/:employee_id", loanPayment);
+router.post("/", loanPayment);
 // get list of all loans
 router.get("/", getLoans);
 // get each employees loan history

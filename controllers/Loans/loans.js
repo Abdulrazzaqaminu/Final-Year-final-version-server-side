@@ -3,26 +3,30 @@ const Payroll = require("../../models/Payroll/payroll");
 const Loans = require("../../models/Loans/loans");
 
 const loanPayment = async (req, res, next) => {
-    const Employee_ID = req.params.employee_id;
-    const newLoan = new Loans({
-        staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
-        email: req.body.email, loan_amount: req.body.loan_amount, approval_date: req.body.approval_date,
-        employee_ID: Employee_ID,
-        loan_duration: {
-            from: req.body.loan_duration.from,
-            to: req.body.loan_duration.to
-        }, loan_details: req.body.loan_details
-    });
-    Enrollment.find({_id: Employee_ID}, (error, result) => {
+    Enrollment.find({email: req.body.email, staff_ID: req.body.staff_ID}, (error, result) => {
         if(error) throw error;
         else {
             if(result.length > 0) {
                 try {
-                    Enrollment.find({email: req.body.email, staff_ID: req.body.staff_ID}, (error, result) => {
+                    let Staff_ID = result[0].staff_ID;
+                    let Employee_ID = result[0]._id;
+                    let Employee_First_Name = result[0].first_name;
+                    let Employee_Last_Name = result[0].last_name;
+                    let Employee_Email = result[0].email;
+                    const newLoan = new Loans({
+                        staff_ID: Staff_ID, first_name: Employee_First_Name, last_name: Employee_Last_Name,
+                        email: Employee_Email, loan_amount: req.body.loan_amount, approval_date: req.body.approval_date,
+                        employee_ID: Employee_ID,
+                        loan_duration: {
+                            from: req.body.loan_duration.from,
+                            to: req.body.loan_duration.to
+                        }, loan_details: req.body.loan_details
+                    });
+                    Enrollment.find({email: Employee_Email, staff_ID: Staff_ID}, (error, result) => {
                         if(error) throw error;
                         else {
                             if(result.length > 0) {
-                                Payroll.find({employee_id: Employee_ID, email: req.body.email}, {loans: 1, _id: 0}, async (error, result) => {
+                                Payroll.find({email: Employee_Email, staff_ID: Staff_ID}, {loans: 1, _id: 0}, async (error, result) => {
                                     if(error) throw error;
                                     else {
                                         if(result[0].loans.length > 0) {

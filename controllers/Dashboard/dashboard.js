@@ -32,11 +32,11 @@ const dashboardAnalytics = async (req, res, next) => {
                                             }
                                         ])
                                         res.status(200).json({
-                                            "Number of Employees": employees,
-                                            "Number of entries": entry,
-                                            "Number of exits": exit,
-                                            "Entry Attendance" : table._pipeline[0].$lookup.localField,
-                                            "Exit Attendance" : table._pipeline[0].$lookup.foreignField
+                                            "Number_of_Employees": employees,
+                                            "Number_of_entries": entry,
+                                            "Number_of_exits": exit,
+                                            "Entry_Attendance" : table._pipeline[0].$lookup.localField,
+                                            "Exit_Attendance" : table._pipeline[0].$lookup.foreignField
                                         });
                                     }
                                 })
