@@ -1,19 +1,23 @@
 const Unit = require("../../models/Department/unit");
 const Department = require("../../models/Department/department");
+const Enrollment = require("../../models/Enrollment/enrollment");
 
 const getAllUnitsUnderDepartment = async (req, res, next) => {
     const Department_ID = req.params.dept_id;
     try {
-        Department.find({_id: Department_ID}, (err, rs) => {
+        Department.find({_id: Department_ID}, (err, dept) => {
             if(err) throw err;
             else {
-                if(rs.length > 0) {
-                    Unit.find({dept_id: Department_ID}, (error, rs) => {
+                if(dept.length > 0) {
+                    Unit.find({dept_id: Department_ID}, (error, unit) => {
                         if(error) throw error;
                         else {
-                            if(rs.length > 0) {
-                                res.status(200).json(rs);
-                            } else if(rs.length === 0) {
+                            if(unit.length > 0) {
+                                res.status(200).json([{
+                                    unit, 
+                                    dept
+                                }]);
+                            } else if(unit.length === 0) {
                                 res.status(404).json({"Message": "There are no units under this department or the department does not exist"});
                             }
                         }
@@ -89,6 +93,7 @@ const updateUnit = async (req, res , next) => {
                         if(error) throw error;
                         else {
                             if(rs.length > 0) {
+                                const Employee_ids = rs[0].employee_ids;
                                 Department.findOne({dept_name: req.body.unit_name}, (error, department) => {
                                     if(error) throw error;
                                     else {
@@ -99,18 +104,33 @@ const updateUnit = async (req, res , next) => {
                                                 if(error) throw error;
                                                 else {
                                                     if(rs) {
-                                                        Unit.find({unit_name: req.body.unit_name}, async (error, rs) => {
+                                                        Unit.find({unit_name: req.body.unit_name}, (error, rs) => {
                                                             if(error) throw error;
                                                             else {
                                                                 if(rs.length > 0) {
                                                                     res.status(200).json({"Message": "Unit name already exists"});
                                                                 } else {
-                                                                    const updatedUnit = await Unit.findByIdAndUpdate(
+                                                                    Unit.findByIdAndUpdate(
                                                                         Unit_ID,
                                                                         {$set: req.body}, 
-                                                                        {new: true}
-                                                                        );
-                                                                    res.status(200).json(updatedUnit);
+                                                                        {new: true},
+                                                                        (error, rs) => {
+                                                                            if(error) throw error;
+                                                                            else {
+                                                                                Enrollment.updateMany({_id: Employee_ids},
+                                                                                    {
+                                                                                        unit: req.body.unit_name
+                                                                                    },
+                                                                                    (error, rs) => {
+                                                                                        if(error) throw error;
+                                                                                        else {
+                                                                                            res.status(200).json({"Message": "Unit updated"});
+                                                                                        }
+                                                                                    }
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                    );
                                                                     // console.log("yes")
                                                                 }
                                                             }
@@ -148,16 +168,27 @@ const deleteUnit = async (req, res, next) => {
                         if(err) throw err;
                         else {
                             if(rs.length > 0) {
-                                await Unit.findByIdAndDelete(Unit_ID);
-                                try {
-                                    await Department.findByIdAndUpdate(Department_ID, {
-                                        $pull: {
-                                            unit: Unit_ID
+                                const Employee_ids = rs[0].employee_ids;
+                                Enrollment.updateMany({_id: Employee_ids},
+                                    {
+                                        unit: "N/A"
+                                    },
+                                    async (error, rs) => {
+                                        if(error) throw error;
+                                        else {
+                                            await Unit.findByIdAndDelete(Unit_ID);
+                                            try {
+                                                await Department.findByIdAndUpdate(Department_ID, {
+                                                    $pull: {
+                                                        unit: Unit_ID
+                                                    }
+                                                })
+                                            } catch (error) {
+                                                next(error);
+                                            }
                                         }
-                                    })
-                                } catch (error) {
-                                    next(error);
-                                }
+                                    }
+                                )
                                 res.status(200).json({"Message": "Unit has been deleted"});
                             } else {
                                 res.status(404).json({"Message": "Unit does not exist"});

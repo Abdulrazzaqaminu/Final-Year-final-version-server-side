@@ -76,7 +76,7 @@ const assign_hod = async (req, res, next) => {
                                                                                             employee_ids: Employee_ID
                                                                                         }
                                                                                     },
-                                                                                    (error, rs) => {
+                                                                                    (error, dept) => {
                                                                                         if(error) throw error;
                                                                                         else {
                                                                                             Unit.findOneAndUpdate(
@@ -100,7 +100,7 @@ const assign_hod = async (req, res, next) => {
                                                                                                             (error, employee) => {
                                                                                                                 if(error) throw error;
                                                                                                                 else {
-                                                                                                                    res.status(200).json(newHod);
+                                                                                                                    res.status(200).json(deptUpdated);
                                                                                                                 }
                                                                                                             }
                                                                                                         )
