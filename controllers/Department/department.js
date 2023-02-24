@@ -51,7 +51,7 @@ const createDepartment = async (req, res, next) => {
                         if(error) throw error;
                         else {
                             if(unit) {
-                                res.status(200).json({"Message": "Department matches a unit name"});
+                                res.status(200).json(unit);
                             } else {
                                 const DepartmentSaved = await newDepartment.save();
                                 res.status(200).json(DepartmentSaved);
@@ -112,7 +112,20 @@ const updateDepartment = async (req, res, next) => {
                                                                     (error, rs) => {
                                                                         if(error) throw error
                                                                         else {
-                                                                            res.status(200).json(updated_department);
+                                                                            Unit.updateMany({"dept.dept_id": Department_ID}, 
+                                                                                {
+                                                                                    dept: {
+                                                                                        dept_id: Department_ID,
+                                                                                        dept_name: req.body.dept_name
+                                                                                    }
+                                                                                },
+                                                                                (error, rs) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        res.status(200).json(updated_department);
+                                                                                    }
+                                                                                }
+                                                                            )
                                                                         }
                                                                     }
                                                                 )
@@ -148,7 +161,7 @@ const deleteDepartment = async (req, res, next) => {
                     Hod.findOneAndDelete({"department.dept_id": Department_ID}, async (error, hod_deleted) =>{
                         if(error) throw error;
                         else {          
-                            await Unit.deleteMany({dept_id: Department_ID});
+                            await Unit.deleteMany({"dept.dept_id": Department_ID});
                             try {
                                 Enrollment.updateMany({_id: Employee_ids},
                                     {

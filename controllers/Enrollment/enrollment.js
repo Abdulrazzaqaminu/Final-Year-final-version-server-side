@@ -76,11 +76,11 @@ const enrollEmployee = async (req, res, next) => {
                                                         else {
                                                             if(unit) {
                                                                 // checking if the unit given is under the department given
-                                                                Unit.find({unit_name: req.body.unit},{dept_id: 1, _id: 0}, (error, rs) => {
+                                                                Unit.find({unit_name: req.body.unit},{"dept.dept_id": 1, _id: 0}, (error, rs) => {
                                                                     if(error) throw error;
                                                                     else {
                                                                         if(rs.length > 0) {
-                                                                            const Department_ID = rs[0].dept_id;
+                                                                            const Department_ID = rs[0].dept.dept_id;
                                                                             // console.log(Department_ID);
                                                                             Department.findOne({_id: Department_ID, dept_name: req.body.department}, async (error, rs) => {
                                                                                 if(error) throw error;

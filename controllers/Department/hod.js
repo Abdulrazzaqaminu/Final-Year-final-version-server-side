@@ -93,14 +93,24 @@ const assign_hod = async (req, res, next) => {
                                                                                                             {_id: Employee_ID},
                                                                                                             {
                                                                                                                 $unset: {
-                                                                                                                    department: Employee_Department,
                                                                                                                     unit: Employee_Unit
                                                                                                                 }
                                                                                                             },
                                                                                                             (error, employee) => {
                                                                                                                 if(error) throw error;
                                                                                                                 else {
-                                                                                                                    res.status(200).json(deptUpdated);
+                                                                                                                    Enrollment.findOneAndUpdate(
+                                                                                                                        {_id: Employee_ID},
+                                                                                                                        {
+                                                                                                                            department: Department_Name
+                                                                                                                        },
+                                                                                                                        (error, employee) => {
+                                                                                                                            if(error) throw error;
+                                                                                                                            else {
+                                                                                                                                res.status(200).json(deptUpdated);
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    )
                                                                                                                 }
                                                                                                             }
                                                                                                         )

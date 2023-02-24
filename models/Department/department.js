@@ -24,9 +24,12 @@ const DepartmentSchema = new mongoose.Schema({
         required: true
     },
     unit: {
-        type: [
-            String
-        ]
+        unit_id: {
+            type: String
+        },
+        unit_name: {
+            type: String
+        }
     },
     employee_ids: {
         type: [
