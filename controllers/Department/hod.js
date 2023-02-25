@@ -192,9 +192,8 @@ const getSingleHod = async (req, res, next) => {
 
 const removeHod = async (req, res, next) => {
     const HOD_ID = req.params.hod_id;
-    const Department_ID = req.params.dept_id;
     try {
-        Hod.findOneAndDelete({employee_id: HOD_ID, "department.dept_id": Department_ID}, (error, hod) => {
+        Hod.findOneAndDelete({employee_id: HOD_ID}, (error, hod) => {
             if(error) throw error;
             else {
                 // console.log(hod_first_name, hod_last_name, hod_email);
@@ -202,6 +201,7 @@ const removeHod = async (req, res, next) => {
                     const HOD_FIRST_NAME = hod.hod_first_name;
                     const HOD_LAST_NAME = hod.hod_last_name;
                     const HOD_EMAIL = hod.hod_email;
+                    const Department_ID = hod.department.dept_id
                     Department.findByIdAndUpdate(Department_ID, {
                         // could not use $pull because dept_HOD was not an array so $unset was used
                         $unset: {

@@ -37,7 +37,7 @@ const enrollEmployee = async (req, res, next) => {
             var Salary = 5000000
         }
     }
-    qrcode.toFile(req.body.email+".png",req.body.email);
+    // qrcode.toFile(req.body.email+".png",req.body.email);
     qrcode.toDataURL(req.body.email, (error, qr) => {
         if(error) throw error;
         else {

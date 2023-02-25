@@ -43,7 +43,7 @@ const createUnit = async (req, res ,next) => {
                         if(error) throw error;
                         else {
                             if(unit){
-                                res.status(200).json(unit);
+                                res.status(200).json({"Message": "unit name already exists"});
                             } else {
                                 Department.findOne({dept_name: req.body.unit_name}, async (error, department) => {
                                     if(error) throw error;
@@ -52,7 +52,7 @@ const createUnit = async (req, res ,next) => {
                                             Department.find({}, (error, rs) => {
                                                 if(error) throw error;
                                                 else {
-                                                    res.status(200).json(rs);
+                                                    res.status(200).json({"Message": "department name already exists"});
                                                 }
                                             })
                                         } else {

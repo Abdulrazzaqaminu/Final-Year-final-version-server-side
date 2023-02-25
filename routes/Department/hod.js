@@ -13,6 +13,6 @@ router.get("/", getAllHods);
 // get single HOD
 router.get("/:hod_id", getSingleHod);
 // remove employee as HOD
-router.delete("/:dept_id/:hod_id", removeHod);
+router.delete("/:hod_id", removeHod);
 
 module.exports = router;
