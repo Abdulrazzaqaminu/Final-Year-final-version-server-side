@@ -11,15 +11,17 @@ const HodSchema = new mongoose.Schema({
     },
     hod_first_name: {
         type: String,
-        required: true
+        required: true,
     },
     hod_last_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     hod_email: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     department: {
         dept_id: {
@@ -28,7 +30,8 @@ const HodSchema = new mongoose.Schema({
         },
         dept_name: {
             type: String,
-            required: true
+            required: true,
+            uppercase: true
         }
     }
 }, {timestamps: true} );

@@ -12,28 +12,28 @@ const DailyPay = require("../../models/Daily_Pay/daily_pay");
 const qrcode = require("qrcode");
 
 const enrollEmployee = async (req, res, next) => {
-    if(req.body.position === 1) {
-        if(req.body.grade === 1) {
+    if(req.body.position === "1") {
+        if(req.body.grade === "1") {
             var Salary = 20000
-        } else if(req.body.grade === 2) {
+        } else if(req.body.grade === "2") {
             var Salary = 25000
-        } else if(req.body.grade === 3) {
+        } else if(req.body.grade === "3") {
             var Salary = 30000
         }
-    } else if(req.body.position === 2) {
-        if(req.body.grade === 1) {
+    } else if(req.body.position === "2") {
+        if(req.body.grade === "1") {
             var Salary = 500000
-        } else if(req.body.grade === 2) {
+        } else if(req.body.grade === "2") {
             var Salary = 700000
-        } else if(req.body.grade === 3) {
+        } else if(req.body.grade === "3") {
             var Salary = 900000
         }
-    } else if(req.body.position === 3) {
-        if(req.body.grade === 1) {
+    } else if(req.body.position === "3") {
+        if(req.body.grade === "1") {
             var Salary = 1750000
-        } else if(req.body.grade === 2) {
+        } else if(req.body.grade === "2") {
             var Salary = 3250000
-        } else if(req.body.grade === 3) {
+        } else if(req.body.grade === "3") {
             var Salary = 5000000
         }
     }
@@ -199,658 +199,326 @@ const getSingleEmployee = async (req, res, next) => {
 }
 
 const edit_employee = async (req, res, next) => {
-    if(req.body.position === 1) {
-        if(req.body.grade === 1) {
-            var Salary = 20000
-        } else if(req.body.grade === 2) {
-            var Salary = 25000
-        } else if(req.body.grade === 3) {
-            var Salary = 30000
-        }
-    } else if(req.body.position === 2) {
-        if(req.body.grade === 1) {
-            var Salary = 500000
-        } else if(req.body.grade === 2) {
-            var Salary = 700000
-        } else if(req.body.grade === 3) {
-            var Salary = 900000
-        }
-    } else if(req.body.position === 3) {
-        if(req.body.grade === 1) {
-            var Salary = 1750000
-        } else if(req.body.grade === 2) {
-            var Salary = 3250000
-        } else if(req.body.grade === 3) {
-            var Salary = 5000000
-        }
+    let emptyFields = [];
+    if(!req.body.first_name) {
+        emptyFields.push("first_name");
+    } 
+    if(!req.body.last_name) {
+        emptyFields.push("last_name");
+    } 
+    if(!req.body.phone_number) {
+        emptyFields.push("phone_number");
+    } 
+    if(!req.body.position) {
+        emptyFields.push("position")
+    } 
+    if(!req.body.grade) {
+        emptyFields.push("grade")
     }
-    const Employee_ID = req.params.employee_id;
-    try {
-        Enrollment.findById(Employee_ID, (error, employee) => {
-            if(error) throw error;
-            else {
-                if(employee) {
-                    const EMAIL = employee.email;
-                    const STAFF_ID = employee.staff_ID;
-                    const HOD_ID = employee._id;
 
-                    // if employee is a HOD
-                    Hod.findOneAndUpdate(
-                        {employee_id: Employee_ID},
-                        {
-                            hod_id: HOD_ID,
-                            hod_first_name: req.body.first_name,
-                            hod_last_name: req.body.last_name,
-                            hod_email: EMAIL
-                        },
-                        (error, hod) => {
-                            if(error) throw error;
-                            else {
-                                if(hod) {
-                                    Enrollment.findOneAndUpdate(
-                                        {_id: Employee_ID},
-                                        {
-                                            first_name: req.body.first_name,
-                                            last_name: req.body.last_name,
-                                            phone_number: req.body.phone_number,
-                                            position: req.body.position,
-                                            grade: req.body.grade,
-                                            salary: Salary,
-                                            address: {
-                                                state: req.body.address.state,
-                                                city: req.body.address.city,
-                                                street: req.body.address.street
-                                            }
-                                        },
-                                        (error, employee) => {
-                                            if(error) throw error;
-                                            else {
-                                                Department.findOneAndUpdate(
-                                                    {"dept_HOD.hod_id": Employee_ID},
-                                                    {
-                                                        dept_HOD: {
-                                                            hod_id: HOD_ID,
-                                                            hod_first_name: req.body.first_name,
-                                                            hod_last_name: req.body.last_name,
-                                                            hod_email: EMAIL
-                                                        }
-                                                    },
-                                                    (error, hod_department) => {
-                                                        if(error) throw error;
-                                                        else {
-                                                            Payroll.findOneAndUpdate(
-                                                                {employee_id: Employee_ID},
-                                                                {
-                                                                    first_name: req.body.first_name,
-                                                                    last_name: req.body.last_name,
-                                                                    annual_gross: Salary
-                                                                },
-                                                                (error, employee_payroll) => {
-                                                                    if(error) throw error;
-                                                                    else {
-                                                                        Loans.findOneAndUpdate(
-                                                                            {employee_ID: Employee_ID},
-                                                                            {
-                                                                                first_name: req.body.first_name,
-                                                                                last_name: req.body.last_name,
-                                                                            },
-                                                                            (error, employee_loan) => {
-                                                                                if(error) throw error;
-                                                                                else {
-                                                                                    Entry.findOneAndUpdate(
-                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                        {
-                                                                                            first_name: req.body.first_name,
-                                                                                            last_name: req.body.last_name,
-                                                                                        },
-                                                                                        (error, entry) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                Exit.findOneAndUpdate(
-                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                    {
-                                                                                                        first_name: req.body.first_name,
-                                                                                                        last_name: req.body.last_name,
-                                                                                                    },
-                                                                                                    (error, exit) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            AttendanceHistory.updateMany(
-                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                {
-                                                                                                                    first_name: req.body.first_name,
-                                                                                                                    last_name: req.body.last_name,
-                                                                                                                },
-                                                                                                                (error, history) => {
-                                                                                                                    if(error) throw error;
-                                                                                                                    else {
-                                                                                                                        WorkingHours.updateMany(
-                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                            {
-                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                last_name: req.body.last_name,
-                                                                                                                            },
-                                                                                                                            (error, working_hours) => {
-                                                                                                                                if(error) throw error;
-                                                                                                                                else {
-                                                                                                                                    DailyPay.updateMany(
-                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                        {
-                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                            position: req.body.position,
-                                                                                                                                            grade: req.body.grade,
-                                                                                                                                            gross_salary: Salary
-                                                                                                                                        },
-                                                                                                                                        (error, dailypay) => {
-                                                                                                                                            if(error) throw error;
-                                                                                                                                            else {
-                                                                                                                                                res.status(200).json({"Message": "Employee updated"});
+    if(emptyFields.length > 0) {
+        return res.status(400).json({error: "Fill in the appropriate fields", emptyFields})
+    } else {      
+        if(req.body.position === "1") {
+            if(req.body.grade === "1") {
+                var Salary = 20000
+            } else if(req.body.grade === "2") {
+                var Salary = 25000
+            } else if(req.body.grade === "3") {
+                var Salary = 30000
+            }
+        } else if(req.body.position === "2") {
+            if(req.body.grade === "1") {
+                var Salary = 500000
+            } else if(req.body.grade === "2") {
+                var Salary = 700000
+            } else if(req.body.grade === "3") {
+                var Salary = 900000
+            }
+        } else if(req.body.position === "3") {
+            if(req.body.grade === "1") {
+                var Salary = 1750000
+            } else if(req.body.grade === "2") {
+                var Salary = 3250000
+            } else if(req.body.grade === "3") {
+                var Salary = 5000000
+            }
+        }
+        const Employee_ID = req.params.employee_id;
+        try {
+            Enrollment.findById(Employee_ID, (error, employee) => {
+                if(error) throw error;
+                else {
+                    if(employee) {
+                        const EMAIL = employee.email;
+                        const STAFF_ID = employee.staff_ID;
+                        const HOD_ID = employee._id;
+    
+                        // if employee is a HOD
+                        Hod.findOneAndUpdate(
+                            {employee_id: Employee_ID},
+                            {
+                                hod_id: HOD_ID,
+                                hod_first_name: req.body.first_name,
+                                hod_last_name: req.body.last_name,
+                                hod_email: EMAIL
+                            },
+                            (error, hod) => {
+                                if(error) throw error;
+                                else {
+                                    if(hod) {
+                                        Enrollment.findOneAndUpdate(
+                                            {_id: Employee_ID},
+                                            {
+                                                first_name: req.body.first_name,
+                                                last_name: req.body.last_name,
+                                                phone_number: req.body.phone_number,
+                                                position: req.body.position,
+                                                grade: req.body.grade,
+                                                gross_salary: Salary,
+                                                // address: {
+                                                //     state: req.body.address.state,
+                                                //     city: req.body.address.city,
+                                                //     street: req.body.address.street
+                                                // }
+                                            },
+                                            (error, employee) => {
+                                                if(error) throw error;
+                                                else {
+                                                    Department.findOneAndUpdate(
+                                                        {"dept_HOD.hod_id": Employee_ID},
+                                                        {
+                                                            dept_HOD: {
+                                                                hod_id: HOD_ID,
+                                                                hod_first_name: req.body.first_name,
+                                                                hod_last_name: req.body.last_name,
+                                                                hod_email: EMAIL
+                                                            }
+                                                        },
+                                                        (error, hod_department) => {
+                                                            if(error) throw error;
+                                                            else {
+                                                                Payroll.findOneAndUpdate(
+                                                                    {employee_id: Employee_ID},
+                                                                    {
+                                                                        first_name: req.body.first_name,
+                                                                        last_name: req.body.last_name,
+                                                                        annual_gross: Salary
+                                                                    },
+                                                                    (error, employee_payroll) => {
+                                                                        if(error) throw error;
+                                                                        else {
+                                                                            Loans.findOneAndUpdate(
+                                                                                {employee_ID: Employee_ID},
+                                                                                {
+                                                                                    first_name: req.body.first_name,
+                                                                                    last_name: req.body.last_name,
+                                                                                },
+                                                                                (error, employee_loan) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        Entry.findOneAndUpdate(
+                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                            {
+                                                                                                first_name: req.body.first_name,
+                                                                                                last_name: req.body.last_name,
+                                                                                            },
+                                                                                            (error, entry) => {
+                                                                                                if(error) throw error;
+                                                                                                else {
+                                                                                                    Exit.findOneAndUpdate(
+                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                        {
+                                                                                                            first_name: req.body.first_name,
+                                                                                                            last_name: req.body.last_name,
+                                                                                                        },
+                                                                                                        (error, exit) => {
+                                                                                                            if(error) throw error;
+                                                                                                            else {
+                                                                                                                AttendanceHistory.updateMany(
+                                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                    {
+                                                                                                                        first_name: req.body.first_name,
+                                                                                                                        last_name: req.body.last_name,
+                                                                                                                    },
+                                                                                                                    (error, history) => {
+                                                                                                                        if(error) throw error;
+                                                                                                                        else {
+                                                                                                                            WorkingHours.updateMany(
+                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                {
+                                                                                                                                    first_name: req.body.first_name,
+                                                                                                                                    last_name: req.body.last_name,
+                                                                                                                                },
+                                                                                                                                (error, working_hours) => {
+                                                                                                                                    if(error) throw error;
+                                                                                                                                    else {
+                                                                                                                                        DailyPay.updateMany(
+                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                            {
+                                                                                                                                                first_name: req.body.first_name,
+                                                                                                                                                last_name: req.body.last_name,
+                                                                                                                                                position: req.body.position,
+                                                                                                                                                grade: req.body.grade,
+                                                                                                                                                gross_salary: Salary
+                                                                                                                                            },
+                                                                                                                                            (error, dailypay) => {
+                                                                                                                                                if(error) throw error;
+                                                                                                                                                else {
+                                                                                                                                                    res.status(200).json({"Message": "Employee updated", employee});
+                                                                                                                                                }
                                                                                                                                             }
-                                                                                                                                        }
-                                                                                                                                    );
+                                                                                                                                        );
+                                                                                                                                    }
                                                                                                                                 }
-                                                                                                                            }
-                                                                                                                        )
+                                                                                                                            )
+                                                                                                                        }
                                                                                                                     }
-                                                                                                                }
-                                                                                                            )
+                                                                                                                )
+                                                                                                            }
                                                                                                         }
-                                                                                                    }
-                                                                                                )
+                                                                                                    )
+                                                                                                }
                                                                                             }
-                                                                                        }
-                                                                                    )
+                                                                                        )
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        )
+                                                                            )
+                                                                        }
                                                                     }
-                                                                }
-                                                            )
+                                                                )
+                                                            }
                                                         }
-                                                    }
-                                                )
+                                                    )
+                                                }
                                             }
-                                        }
-                                    )
-                                } else {
-                                    // checking if department passed is valid
-                                    Department.findOne({dept_name: req.body.department}, (error, department) => {
-                                        if(error) throw error;
-                                        else {
-                                            if(department) {
-                                                Unit.findOne({unit_name: req.body.unit}, (error, unit) => {
-                                                    if(error) throw error;
-                                                    else {
-                                                        if(unit) {
-                                                            // checking if unit given is under department given
-                                                            const Department_ID = unit.dept_id;
-                                                            Department.findOne({_id: Department_ID, dept_name: req.body.department}, (error, rs) => {
-                                                                if(error) throw error;
-                                                                else {
-                                                                    if(rs) {
-                                                                        // if department is not changed
-                                                                        Department.findOne({employee_ids: Employee_ID, dept_name: req.body.department}, (error, rs) => {
-                                                                            if(error) throw error;
-                                                                            else {
-                                                                                if(rs) {
-                                                                                    // if unit is not changed
-                                                                                    Unit.findOne({employee_ids: Employee_ID, unit_name: req.body.unit}, (error, unit) => {
-                                                                                        if(error) throw error;
-                                                                                        else {
-                                                                                            if(unit) {
-                                                                                                Enrollment.findOneAndUpdate(
-                                                                                                    {_id: Employee_ID},
-                                                                                                    {
-                                                                                                        first_name: req.body.first_name,
-                                                                                                        last_name: req.body.last_name,
-                                                                                                        phone_number: req.body.phone_number,
-                                                                                                        department: req.body.department,
-                                                                                                        unit: req.body.unit,
-                                                                                                        position: req.body.position,
-                                                                                                        grade: req.body.grade,
-                                                                                                        salary: Salary,
-                                                                                                        address: {
-                                                                                                            state: req.body.address.state,
-                                                                                                            city: req.body.address.city,
-                                                                                                            street: req.body.address.street
-                                                                                                        }
-                                                                                                    },
-                                                                                                    (error, employee) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            Payroll.findOneAndUpdate(
-                                                                                                                {employee_id: Employee_ID},
-                                                                                                                {
-                                                                                                                    first_name: req.body.first_name,
-                                                                                                                    last_name: req.body.last_name,
-                                                                                                                    annual_gross: Salary
-                                                                                                                },
-                                                                                                                (error, employeePayroll) => {
-                                                                                                                    if(error) throw error;
-                                                                                                                    else {
-                                                                                                                        Loans.findOneAndUpdate(
-                                                                                                                            {employee_ID: Employee_ID},
-                                                                                                                            {
-                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                last_name: req.body.last_name,
-                                                                                                                            },
-                                                                                                                            (error, employee_loan) => {
-                                                                                                                                if(error) throw error;
-                                                                                                                                else {
-                                                                                                                                    Entry.findOneAndUpdate(
-                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                        {
-                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                        },
-                                                                                                                                        (error, entry) => {
-                                                                                                                                            if(error) throw error;
-                                                                                                                                            else {
-                                                                                                                                                Exit.findOneAndUpdate(
-                                                                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                    {
-                                                                                                                                                        first_name: req.body.first_name,
-                                                                                                                                                        last_name: req.body.last_name,
-                                                                                                                                                    },
-                                                                                                                                                    (error, exit) => {
-                                                                                                                                                        if(error) throw error;
-                                                                                                                                                        else {
-                                                                                                                                                            AttendanceHistory.updateMany(
-                                                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                {
-                                                                                                                                                                    first_name: req.body.first_name,
-                                                                                                                                                                    last_name: req.body.last_name,
-                                                                                                                                                                },
-                                                                                                                                                                (error, history) => {
-                                                                                                                                                                    if(error) throw error;
-                                                                                                                                                                    else {
-                                                                                                                                                                        WorkingHours.updateMany(
-                                                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                            {
-                                                                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                                                                last_name: req.body.last_name,
-                                                                                                                                                                            },
-                                                                                                                                                                            (error, working_hours) => {
-                                                                                                                                                                                if(error) throw error;
-                                                                                                                                                                                else {
-                                                                                                                                                                                    DailyPay.updateMany(
-                                                                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                        {
-                                                                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                                                                            position: req.body.position,
-                                                                                                                                                                                            grade: req.body.grade,
-                                                                                                                                                                                            gross_salary: Salary
-                                                                                                                                                                                        },
-                                                                                                                                                                                        (error, dailypay) => {
-                                                                                                                                                                                            if(error) throw error;
-                                                                                                                                                                                            else {
-                                                                                                                                                                                                res.status(200).json({"Message": "Employee updated"});
-                                                                                                                                                                                            }
-                                                                                                                                                                                        }
-                                                                                                                                                                                    );
-                                                                                                                                                                                }
-                                                                                                                                                                            }
-                                                                                                                                                                        )
-                                                                                                                                                                    }
-                                                                                                                                                                }
-                                                                                                                                                            )
-                                                                                                                                                        }
-                                                                                                                                                    }
-                                                                                                                                                )
-                                                                                                                                            }
-                                                                                                                                        }
-                                                                                                                                    )
+                                        )
+                                    } else {
+                                        Enrollment.findOneAndUpdate(
+                                            {_id: Employee_ID},
+                                            {
+                                                first_name: req.body.first_name,
+                                                last_name: req.body.last_name,
+                                                phone_number: req.body.phone_number,
+                                                position: req.body.position,
+                                                grade: req.body.grade,
+                                                gross_salary: Salary
+                                                // address: {
+                                                //     state: req.body.address.state,
+                                                //     city: req.body.address.city,
+                                                //     street: req.body.address.street
+                                                // }
+                                            },
+                                            (error, employee) => {
+                                                if(error) throw error;
+                                                else {
+                                                    Payroll.findOneAndUpdate(
+                                                        {employee_id: Employee_ID},
+                                                        {
+                                                            first_name: req.body.first_name,
+                                                            last_name: req.body.last_name,
+                                                            annual_gross: Salary
+                                                        },
+                                                        (error, employeePayroll) => {
+                                                            if(error) throw error;
+                                                            else {
+                                                                Loans.findOneAndUpdate(
+                                                                    {employee_ID: Employee_ID},
+                                                                    {
+                                                                        first_name: req.body.first_name,
+                                                                        last_name: req.body.last_name,
+                                                                    },
+                                                                    (error, employee_loan) => {
+                                                                        if(error) throw error;
+                                                                        else {
+                                                                            Entry.findOneAndUpdate(
+                                                                                {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                {
+                                                                                    first_name: req.body.first_name,
+                                                                                    last_name: req.body.last_name,
+                                                                                },
+                                                                                (error, entry) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        Exit.findOneAndUpdate(
+                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                            {
+                                                                                                first_name: req.body.first_name,
+                                                                                                last_name: req.body.last_name,
+                                                                                            },
+                                                                                            (error, exit) => {
+                                                                                                if(error) throw error;
+                                                                                                else {
+                                                                                                    AttendanceHistory.updateMany(
+                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                        {
+                                                                                                            first_name: req.body.first_name,
+                                                                                                            last_name: req.body.last_name,
+                                                                                                        },
+                                                                                                        (error, history) => {
+                                                                                                            if(error) throw error;
+                                                                                                            else {
+                                                                                                                WorkingHours.updateMany(
+                                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                    {
+                                                                                                                        first_name: req.body.first_name,
+                                                                                                                        last_name: req.body.last_name,
+                                                                                                                    },
+                                                                                                                    (error, working_hours) => {
+                                                                                                                        if(error) throw error;
+                                                                                                                        else {
+                                                                                                                            DailyPay.updateMany(
+                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
+                                                                                                                                {
+                                                                                                                                    first_name: req.body.first_name,
+                                                                                                                                    last_name: req.body.last_name,
+                                                                                                                                    position: req.body.position,
+                                                                                                                                    grade: req.body.grade,
+                                                                                                                                    gross_salary: Salary
+                                                                                                                                },
+                                                                                                                                (error, dailypay) => {
+                                                                                                                                    if(error) throw error;
+                                                                                                                                    else {
+                                                                                                                                        res.status(200).json({"Message": "Employee updated"});
+                                                                                                                                    }
                                                                                                                                 }
-                                                                                                                            }
-                                                                                                                        )
+                                                                                                                            );
+                                                                                                                        }
                                                                                                                     }
-                                                                                                                }
-                                                                                                            )
+                                                                                                                )
+                                                                                                            }
                                                                                                         }
-                                                                                                    }
-                                                                                                ) 
-                                                                                            } else {
-                                                                                                // if unit is changed
-                                                                                                Unit.findOneAndUpdate(
-                                                                                                    {employee_ids: Employee_ID},
-                                                                                                    {
-                                                                                                        $pull: {
-                                                                                                            employee_ids: Employee_ID
-                                                                                                        }
-                                                                                                    },
-                                                                                                    (error, rs) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            Unit.findOneAndUpdate(
-                                                                                                                {unit_name: req.body.unit},
-                                                                                                                {
-                                                                                                                    $push: {
-                                                                                                                        employee_ids: Employee_ID
-                                                                                                                    }
-                                                                                                                },
-                                                                                                                (error, unit) => {
-                                                                                                                    if(error) throw error;
-                                                                                                                    else {
-                                                                                                                        Enrollment.findOneAndUpdate(
-                                                                                                                            {_id: Employee_ID},
-                                                                                                                            {
-                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                last_name: req.body.last_name,
-                                                                                                                                phone_number: req.body.phone_number,
-                                                                                                                                department: req.body.department,
-                                                                                                                                unit: req.body.unit,
-                                                                                                                                position: req.body.position,
-                                                                                                                                grade: req.body.grade,
-                                                                                                                                salary: Salary,
-                                                                                                                                address: {
-                                                                                                                                    state: req.body.address.state,
-                                                                                                                                    city: req.body.address.city,
-                                                                                                                                    street: req.body.address.street
-                                                                                                                                }
-                                                                                                                            },
-                                                                                                                            (error, employee) => {
-                                                                                                                                if(error) throw error;
-                                                                                                                                else {
-                                                                                                                                    Payroll.findOneAndUpdate(
-                                                                                                                                        {employee_id: Employee_ID},
-                                                                                                                                        {
-                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                            annual_gross: Salary
-                                                                                                                                        },
-                                                                                                                                        (error, employeePayroll) => {
-                                                                                                                                            if(error) throw error;
-                                                                                                                                            else {
-                                                                                                                                                Loans.findOneAndUpdate(
-                                                                                                                                                    {employee_ID: Employee_ID},
-                                                                                                                                                    {
-                                                                                                                                                        first_name: req.body.first_name,
-                                                                                                                                                        last_name: req.body.last_name,
-                                                                                                                                                    },
-                                                                                                                                                    (error, employee_loan) => {
-                                                                                                                                                        if(error) throw error;
-                                                                                                                                                        else {
-                                                                                                                                                            Entry.findOneAndUpdate(
-                                                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                {
-                                                                                                                                                                    first_name: req.body.first_name,
-                                                                                                                                                                    last_name: req.body.last_name,
-                                                                                                                                                                },
-                                                                                                                                                                (error, entry) => {
-                                                                                                                                                                    if(error) throw error;
-                                                                                                                                                                    else {
-                                                                                                                                                                        Exit.findOneAndUpdate(
-                                                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                            {
-                                                                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                                                                last_name: req.body.last_name,
-                                                                                                                                                                            },
-                                                                                                                                                                            (error, exit) => {
-                                                                                                                                                                                if(error) throw error;
-                                                                                                                                                                                else {
-                                                                                                                                                                                    AttendanceHistory.updateMany(
-                                                                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                        {
-                                                                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                                                                        },
-                                                                                                                                                                                        (error, history) => {
-                                                                                                                                                                                            if(error) throw error;
-                                                                                                                                                                                            else {
-                                                                                                                                                                                                WorkingHours.updateMany(
-                                                                                                                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                                    {
-                                                                                                                                                                                                        first_name: req.body.first_name,
-                                                                                                                                                                                                        last_name: req.body.last_name,
-                                                                                                                                                                                                    },
-                                                                                                                                                                                                    (error, working_hours) => {
-                                                                                                                                                                                                        if(error) throw error;
-                                                                                                                                                                                                        else {
-                                                                                                                                                                                                            DailyPay.updateMany(
-                                                                                                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                                                {
-                                                                                                                                                                                                                    first_name: req.body.first_name,
-                                                                                                                                                                                                                    last_name: req.body.last_name,
-                                                                                                                                                                                                                    position: req.body.position,
-                                                                                                                                                                                                                    grade: req.body.grade,
-                                                                                                                                                                                                                    gross_salary: Salary
-                                                                                                                                                                                                                },
-                                                                                                                                                                                                                (error, dailypay) => {
-                                                                                                                                                                                                                    if(error) throw error;
-                                                                                                                                                                                                                    else {
-                                                                                                                                                                                                                        res.status(200).json({"Message": "Employee updated"});
-                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                }
-                                                                                                                                                                                                            );
-                                                                                                                                                                                                        }
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                )
-                                                                                                                                                                                            }
-                                                                                                                                                                                        }
-                                                                                                                                                                                    )
-                                                                                                                                                                                }
-                                                                                                                                                                            }
-                                                                                                                                                                        )
-                                                                                                                                                                    }
-                                                                                                                                                                }
-                                                                                                                                                            )
-                                                                                                                                                        }
-                                                                                                                                                    }
-                                                                                                                                                )
-                                                                                                                                            }
-                                                                                                                                        }
-                                                                                                                                    )
-                                                                                                                                }
-                                                                                                                            }
-                                                                                                                        )
-                                                                                                                    } 
-                                                                                                                }
-                                                                                                            )
-                                                                                                        }
-                                                                                                    }
-                                                                                                )
+                                                                                                    )
+                                                                                                }
                                                                                             }
-                                                                                        }
-                                                                                    })
-                                                                                } else {
-                                                                                    // if departement is changed
-                                                                                    Department.findOneAndUpdate(
-                                                                                        {employee_ids: Employee_ID},
-                                                                                        {
-                                                                                            $pull: {
-                                                                                                employee_ids: Employee_ID
-                                                                                            }
-                                                                                        },
-                                                                                        (error, rs) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                Department.findOneAndUpdate(
-                                                                                                    {dept_name: req.body.department},
-                                                                                                    {
-                                                                                                        $push: {
-                                                                                                            employee_ids: Employee_ID
-                                                                                                        }
-                                                                                                    },
-                                                                                                    (error, unit) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            // if unit is also changed
-                                                                                                            Unit.findOneAndUpdate(
-                                                                                                                {employee_ids: Employee_ID},
-                                                                                                                {
-                                                                                                                    $pull: {
-                                                                                                                        employee_ids: Employee_ID
-                                                                                                                    }
-                                                                                                                },
-                                                                                                                (error, rs) => {
-                                                                                                                    if(error) throw error;
-                                                                                                                    else {
-                                                                                                                        Unit.findOneAndUpdate(
-                                                                                                                            {unit_name: req.body.unit},
-                                                                                                                            {
-                                                                                                                                $push: {
-                                                                                                                                    employee_ids: Employee_ID
-                                                                                                                                }
-                                                                                                                            },
-                                                                                                                            (error, unit) => {
-                                                                                                                                if(error) throw error;
-                                                                                                                                else {
-                                                                                                                                    Enrollment.findOneAndUpdate(
-                                                                                                                                        {_id: Employee_ID},
-                                                                                                                                        {
-                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                            phone_number: req.body.phone_number,
-                                                                                                                                            department: req.body.department,
-                                                                                                                                            unit: req.body.unit,
-                                                                                                                                            position: req.body.position,
-                                                                                                                                            grade: req.body.grade,
-                                                                                                                                            salary: Salary,
-                                                                                                                                            address: {
-                                                                                                                                                state: req.body.address.state,
-                                                                                                                                                city: req.body.address.city,
-                                                                                                                                                street: req.body.address.street
-                                                                                                                                            }
-                                                                                                                                        },
-                                                                                                                                        (error, employee) => {
-                                                                                                                                            if(error) throw error;
-                                                                                                                                            else {
-                                                                                                                                                Payroll.findOneAndUpdate(
-                                                                                                                                                    {employee_id: Employee_ID},
-                                                                                                                                                    {
-                                                                                                                                                        first_name: req.body.first_name,
-                                                                                                                                                        last_name: req.body.last_name,
-                                                                                                                                                        annual_gross: Salary
-                                                                                                                                                    },
-                                                                                                                                                    (error, employeePayroll) => {
-                                                                                                                                                        if(error) throw error;
-                                                                                                                                                        else {
-                                                                                                                                                            Loans.findOneAndUpdate(
-                                                                                                                                                                {employee_ID: Employee_ID},
-                                                                                                                                                                {
-                                                                                                                                                                    first_name: req.body.first_name,
-                                                                                                                                                                    last_name: req.body.last_name,
-                                                                                                                                                                },
-                                                                                                                                                                (error, employee_loan) => {
-                                                                                                                                                                    if(error) throw error;
-                                                                                                                                                                    else {
-                                                                                                                                                                        Entry.findOneAndUpdate(
-                                                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                            {
-                                                                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                                                                last_name: req.body.last_name,
-                                                                                                                                                                            },
-                                                                                                                                                                            (error, entry) => {
-                                                                                                                                                                                if(error) throw error;
-                                                                                                                                                                                else {
-                                                                                                                                                                                    Exit.findOneAndUpdate(
-                                                                                                                                                                                        {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                        {
-                                                                                                                                                                                            first_name: req.body.first_name,
-                                                                                                                                                                                            last_name: req.body.last_name,
-                                                                                                                                                                                        },
-                                                                                                                                                                                        (error, exit) => {
-                                                                                                                                                                                            if(error) throw error;
-                                                                                                                                                                                            else {
-                                                                                                                                                                                                AttendanceHistory.updateMany(
-                                                                                                                                                                                                    {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                                    {
-                                                                                                                                                                                                        first_name: req.body.first_name,
-                                                                                                                                                                                                        last_name: req.body.last_name,
-                                                                                                                                                                                                    },
-                                                                                                                                                                                                    (error, history) => {
-                                                                                                                                                                                                        if(error) throw error;
-                                                                                                                                                                                                        else {
-                                                                                                                                                                                                            WorkingHours.updateMany(
-                                                                                                                                                                                                                {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                                                {
-                                                                                                                                                                                                                    first_name: req.body.first_name,
-                                                                                                                                                                                                                    last_name: req.body.last_name,
-                                                                                                                                                                                                                },
-                                                                                                                                                                                                                (error, working_hours) => {
-                                                                                                                                                                                                                    if(error) throw error;
-                                                                                                                                                                                                                    else {
-                                                                                                                                                                                                                        DailyPay.updateMany(
-                                                                                                                                                                                                                            {email: EMAIL, staff_ID: STAFF_ID},
-                                                                                                                                                                                                                            {
-                                                                                                                                                                                                                                first_name: req.body.first_name,
-                                                                                                                                                                                                                                last_name: req.body.last_name,
-                                                                                                                                                                                                                                position: req.body.position,
-                                                                                                                                                                                                                                grade: req.body.grade,
-                                                                                                                                                                                                                                gross_salary: Salary
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            (error, dailypay) => {
-                                                                                                                                                                                                                                if(error) throw error;
-                                                                                                                                                                                                                                else {
-                                                                                                                                                                                                                                    res.status(200).json({"Message": "Employee updated"});
-                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                        );
-                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                }
-                                                                                                                                                                                                            )
-                                                                                                                                                                                                        }
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                )
-                                                                                                                                                                                            }
-                                                                                                                                                                                        }
-                                                                                                                                                                                    )
-                                                                                                                                                                                }
-                                                                                                                                                                            }
-                                                                                                                                                                        )
-                                                                                                                                                                    }
-                                                                                                                                                                }
-                                                                                                                                                            );
-                                                                                                                                                        }
-                                                                                                                                                    }
-                                                                                                                                                );
-                                                                                                                                            }
-                                                                                                                                        }
-                                                                                                                                    );
-                                                                                                                                } 
-                                                                                                                            }
-                                                                                                                        );
-                                                                                                                    }
-                                                                                                                }
-                                                                                                            );
-                                                                                                        }
-                                                                                                    }
-                                                                                                );
-                                                                                            }
-                                                                                        }
-                                                                                    );
+                                                                                        )
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        })
-                                                                    } else {
-                                                                        res.status(404).json({"Message": "Unit given is not under department given"});
+                                                                            )
+                                                                        }
                                                                     }
-                                                                }
-                                                            })
-                                                        } else {
-                                                            res.status(404).json({"Message": "Unit given does not exist"});
+                                                                )
+                                                            }
                                                         }
-                                                    }
-                                                })
-                                            } else {
-                                                res.status(404).json({"Message": "Department given does not exist"});
+                                                    )
+                                                }
                                             }
-                                        }
-                                    })
+                                        ) 
+                                                                                              
+                                    }
                                 }
                             }
-                        }
-                    )
-                } else {
-                    res.status(404).json({"Message": "Employee not found"});
+                        )
+                    } else {
+                        res.status(404).json({"Message": "Employee not found"});
+                    }
                 }
-            }
-        })
-    } catch (error) {
-        next(error);
+            })
+        } catch (error) {
+            next(error);
+        }
     }
+
 }
 
 const unenroll = async (req, res, next) => {
@@ -863,12 +531,12 @@ const unenroll = async (req, res, next) => {
                     const HOD_FIRST_NAME = employee.first_name;
                     const HOD_LAST_NAME = employee.last_name;
                     const HOD_EMAIL = employee.email;
-
                     const Employee_qrcode = employee.qrcode;
+
                     Enrollment.findOneAndUpdate(
                         {_id: Employee_ID}, 
                         {
-                            status: "Not Active",
+                            status: "Terminated",
                             $unset: {
                                 qrcode: Employee_qrcode
                             }

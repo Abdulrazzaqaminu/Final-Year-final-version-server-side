@@ -11,11 +11,13 @@ const AttendanceHistorySchema = mongoose.Schema({
     },
     last_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     date: {
         type: String,

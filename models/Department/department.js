@@ -4,31 +4,35 @@ const DepartmentSchema = new mongoose.Schema({
     dept_HOD: {
         hod_id: {
             type: String,
-            default: "N/A"
+            default: "N/A",
         },
         hod_first_name: {
             type: String,
-            default: "N/A"
+            default: "N/A",
         },
         hod_last_name: {
             type: String,
-            default: "N/A"
+            default: "N/A",
+            uppercase: true
         },
         hod_email: {
             type: String,
-            default: "N/A"
+            default: "N/A",
+            lowercase: true
         }
     },
     dept_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     unit: {
         unit_id: {
             type: String
         },
         unit_name: {
-            type: String
+            type: String,
+            uppercase: true
         }
     },
     employee_ids: {

@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const UntiSchema = new mongoose.Schema({   
     unit_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     dept: {
         dept_id: {
@@ -12,7 +13,8 @@ const UntiSchema = new mongoose.Schema({
         }, 
         dept_name: {
             type: String,
-            required: true
+            required: true,
+            uppercase: true
         }
     },
     employee_ids: {

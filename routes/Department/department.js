@@ -5,7 +5,8 @@ const {
     getSingledepartment,
     createDepartment,
     updateDepartment,
-    deleteDepartment } = require("../../controllers/Department/department");
+    deleteDepartment,
+    transfer } = require("../../controllers/Department/department");
 
 // get all departments
 router.get("/", getAllDepartments);
@@ -17,5 +18,7 @@ router.post("/", createDepartment);
 router.put("/:dept_id", updateDepartment);
 // delete department
 router.delete("/:dept_id", deleteDepartment);
+// transfer employee
+router.post("/transfer_employee", transfer);
 
 module.exports = router;

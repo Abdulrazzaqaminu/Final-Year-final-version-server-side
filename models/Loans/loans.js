@@ -7,15 +7,17 @@ const LoanSchema = new mongoose.Schema({
     },
     first_name: {
         type: String,
-        required: true
+        required: true,
     },
     last_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     loan_amount: {
         type: Number,
@@ -42,7 +44,8 @@ const LoanSchema = new mongoose.Schema({
     },
     loan_details: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     }
 }, {timestamps: true})
 

@@ -7,15 +7,17 @@ const EnrollmentSchema = new mongoose.Schema({
     },
     first_name: {
         type: String,
-        required: true
+        required: true,
     },
     last_name: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     date_of_birth: {
         type: String,
@@ -30,21 +32,23 @@ const EnrollmentSchema = new mongoose.Schema({
     department: {
         type: String,
         required: true,
-        default: "N/A"
+        default: "N/A",
+        uppercase: true
     },
     unit: {
         type: String,
         required: true,
-        default: "N/A"
+        default: "N/A",
+        uppercase: true
     },
     position: {
-        type: Number,
+        type: String,
         required: true,
         min: 1,
         max: 3,
     },
     grade: {
-        type: Number,
+        type: String,
         required: true,
         min: 1,
         max: 3,
