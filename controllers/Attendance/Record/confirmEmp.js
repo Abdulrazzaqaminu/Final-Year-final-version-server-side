@@ -17,7 +17,7 @@ const findEmployee = async (req, res, next) => {
                             if(employee) {
                                 res.status(200).json(employee);
                             } else {
-                                res.status(200).json({"Message" : "This card has been terminated"});
+                                res.status(400).json({"Message" : "This card has been terminated"});
                             }
                         }
                     })

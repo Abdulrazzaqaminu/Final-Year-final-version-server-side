@@ -26,7 +26,7 @@ const DepartmentSchema = new mongoose.Schema({
         required: true,
         uppercase: true
     },
-    unit: {
+    unit: [{
         unit_id: {
             type: String
         },
@@ -34,7 +34,7 @@ const DepartmentSchema = new mongoose.Schema({
             type: String,
             uppercase: true
         }
-    },
+    }],
     employee_ids: {
         type: [
             String

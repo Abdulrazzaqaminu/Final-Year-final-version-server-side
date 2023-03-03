@@ -1,4 +1,4 @@
-// const Enrollment = require("../../../models/Enrollment/enrollment");
+const Enrollment = require("../../../models/Enrollment/enrollment");
 const Payroll = require("../../../models/Payroll/payroll");
 const WorkingHours = require("../../../models/Attendance/working_hours");
 const DailyPay = require("../../../models/Daily_Pay/daily_pay");
@@ -40,95 +40,137 @@ const salary_calculator = async (req, res, next) =>{
 
     const Employee_ID = req.params.employee_id;
     try {
-        Payroll.find({employee_id: Employee_ID}, (error, employee) =>{
+        Enrollment.find({_id: Employee_ID}, (error, rs) => {
             if(error) throw error;
-            else{
-                if(employee.length > 0) {
-                    let empInfo = employee[0];
-                    let Staff_ID = employee[0].staff_ID;
-                    let Employee_First_Name = employee[0].first_name;
-                    let Employee_Last_Name = employee[0].last_name;
-                    let Employee_Type = employee[0].employee_type;
-                    let email = employee[0].email;
-                    // console.log(email+" "+gross);
-                    // console.log(empInfo);
-
-                    WorkingHours.aggregate([
-                        {
-                            // checking if emails match
-                            $match: {
-                                email: email,
-                           }
-                        },
-                        {
-                            // suming up employees hours worked
-                            $group: {
-                                _id: "$email",
-                                total_hours: {
-                                    $sum: "$hours.worked_hours"
-                                }, 
-                                days_worked: {
-                                    $sum: 1
-                                }                     
-                            } 
-                        },
-                    ],  (error, employee_worked_hours) => {
+            else {
+                if(rs.length > 0) {
+                    let Staff_ID = rs[0].staff_ID;
+                    let Employee_First_Name = rs[0].first_name;
+                    let Employee_Last_Name = rs[0].last_name;
+                    let Employee_Position = rs[0].position;
+                    let Employee_Grade = rs[0].grade;
+                    let Employee_Type = rs[0].employee_type;
+                    let email = rs[0].email;
+                    Payroll.find({employee_id: Employee_ID}, (error, employee) =>{
                         if(error) throw error;
-                        else {
-                            if(employee_worked_hours.length > 0) {
-                                let total_hours_worked = employee_worked_hours[0].total_hours;
-                                let total_worked_days = employee_worked_hours[0].days_worked;
-
-                                DailyPay.aggregate([
+                        else{
+                            if(employee.length > 0) {
+                                // console.log(email+" "+gross);
+                                // console.log(empInfo);
+                                WorkingHours.aggregate([
                                     {
+                                        // checking if emails match
                                         $match: {
-                                            email: email
-                                        }
+                                            email: email,
+                                       }
                                     },
                                     {
+                                        // suming up employees hours worked
                                         $group: {
                                             _id: "$email",
-                                            total_netsalary: {
-                                                $sum: "$net_salary.netsalary"
+                                            total_hours: {
+                                                $sum: "$hours.worked_hours"
+                                            },
+                                            total_extra_hours: {
+                                                $sum: "$hours.extra_hours"
+                                            },
+                                            days_worked: {
+                                                $sum: 1
+                                            }                     
+                                        } 
+                                    },
+                                ],  (error, employee) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(employee.length > 0) {
+                                            let total_hours_worked = employee[0].total_hours;
+                                            let total_worked_days = employee[0].days_worked;
+                                            let total_overtime_hours = employee[0].total_extra_hours;
+                                            DailyPay.aggregate([
+                                                {
+                                                    $match: {
+                                                        email: email
+                                                    }
+                                                },
+                                                {
+                                                    $group: {
+                                                        _id: "$email",
+                                                        total_netsalary: {
+                                                            $sum: "$net_salary.netsalary"
+                                                        }
+                                                    }
+                                                }
+                                            ], (error, rs) => {
+                                                if(error) throw error
+                                                else {
+                                                    const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    const Net_Salary_Formatted = (Net_Salary).toLocaleString();
+                                                    if(Employee_Type === "Full-Time") {
+                                                        res.status(200).json({
+                                                            "Staff_ID" : Staff_ID,
+                                                            "First_Name" : Employee_First_Name,
+                                                            "Last_Name" : Employee_Last_Name,
+                                                            "Employee_Email": email,
+                                                            "Position" : Employee_Position,
+                                                            "Grade" : Employee_Grade,
+                                                            "Employee_Type": Employee_Type,
+                                                            "Days_Worked": total_worked_days,
+                                                            "Hours_Worked": total_hours_worked,
+                                                            "Extra_Hours": total_overtime_hours,
+                                                            "Net_Salary": `${"NGN "+Net_Salary_Formatted}`
+                                                        });
+                                                    } else {
+                                                        res.status(200).json({
+                                                            "Staff_ID" : Staff_ID,
+                                                            "First_Name" : Employee_First_Name,
+                                                            "Last_Name" : Employee_Last_Name,
+                                                            "Employee_Email": email,
+                                                            "Position" : Employee_Position,
+                                                            "Grade" : Employee_Grade,
+                                                            "Employee_Type": Employee_Type,
+                                                            "Days_Worked": total_worked_days,
+                                                            "Hours_Worked": total_hours_worked,
+                                                            "Net_Salary": `${"NGN "+Net_Salary_Formatted}`
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            if(Employee_Type === "Full-Time") {
+                                                const employee = {
+                                                    "Staff_ID" : Staff_ID,
+                                                    "First_Name" : Employee_First_Name,
+                                                    "Last_Name" : Employee_Last_Name,
+                                                    "Employee_Email": email,
+                                                    "Position" : Employee_Position,
+                                                    "Grade" : Employee_Grade,
+                                                    "Employee_Type": Employee_Type,
+                                                    "Days_Worked": 0,
+                                                    "Hours_Worked": 0,
+                                                    "Extra_Hours": 0,
+                                                    "Net_Salary": "NGN 0.00"
+                                                }
+                                                res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                            } else {
+                                                const employee = {
+                                                    "Staff_ID" : Staff_ID,
+                                                    "First_Name" : Employee_First_Name,
+                                                    "Last_Name" : Employee_Last_Name,
+                                                    "Employee_Email": email,
+                                                    "Position" : Employee_Position,
+                                                    "Grade" : Employee_Grade,
+                                                    "Employee_Type": Employee_Type,
+                                                    "Days_Worked": 0,
+                                                    "Hours_Worked": 0,
+                                                    "Net_Salary": "NGN 0.00"
+                                                }
+                                                res.status(400).json({"Message": "Employee is yet to start work", employee});
                                             }
                                         }
                                     }
-                                ], (error, rs) => {
-                                    if(error) throw error
-                                    else {
-                                        const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                        const Net_Salary_Formatted = (Net_Salary).toLocaleString();
-                                        if(Employee_Type === "Full-Time") {
-                                            res.status(200).json({
-                                                "Staff ID" : Staff_ID,
-                                                "First Name" : Employee_First_Name,
-                                                "Last Name" : Employee_Last_Name,
-                                                "Employee Email": email,
-                                                "Position" : empInfo.position,
-                                                "Grade" : empInfo.grade,
-                                                "Employee Type": Employee_Type,
-                                                "Days Worked": total_worked_days,
-                                                "Hours Worked": total_hours_worked,
-                                                "Net Salary (per total days worked)": `${"NGN "+Net_Salary_Formatted}`
-                                            });
-                                        } else {
-                                            res.status(200).json({
-                                                "Staff ID" : Staff_ID,
-                                                "First Name" : Employee_First_Name,
-                                                "Last Name" : Employee_Last_Name,
-                                                "Employee Email": email,
-                                                "Position" : empInfo.position,
-                                                "Grade" : empInfo.grade,
-                                                "Employee Type": Employee_Type,
-                                                "Days Worked": total_worked_days,
-                                                "Hours Worked": total_hours_worked,
-                                                "Net Salary (per total hours worked)": `${"NGN "+Net_Salary_Formatted}`
-                                            });
-                                        }
-                                    }
-                                });
+                                })
                             } else {
-                                res.status(200).json({"Message": "Employee has no working hours"});
+                                res.status(404).json({"Message": "Employee not found"});
                             }
                         }
                     })

@@ -3,90 +3,107 @@ const Enrollment = require("../../models/Enrollment/enrollment");
 const Hod = require("../../models/Department/hod");
 
 const assign_hod = async (req, res, next) => {
-    const Department_ID = req.params.dept_id;
-    try {
-        Enrollment.findOne({email: req.body.dept_HOD_email, status: "Active"}, (error, rs) => {
-            if(error) throw error;
-            else {
-                if(rs) {
-                    let Employee_ID = rs._id;
-                    let Staff_ID = rs.staff_ID;
-                    let First_Name = rs.first_name;
-                    let Last_Name = rs.last_name;
-                    let Email = rs.email;
-                    let Employee_Department = rs.department;
-                    Department.findOne({_id: Department_ID}, (error, rs) => {
-                        if(error) throw error;
-                        else {
-                            if(rs) {
-                                Department.findOne({_id: Department_ID, dept_name: Employee_Department}, (error, rs) => {
-                                    if(error) throw error;
-                                    else {
-                                        if(rs) {
-                                            const Department_Name = rs.dept_name;
-                                            Hod.findOne({"department.dept_id": Department_ID}, (error, hod_exists) => {
-                                                if(error) throw error;
-                                                else {
-                                                    if(hod_exists) {
-                                                        res.status(200).json({"Message": "Department already has a HOD"});
-                                                    } else {
-                                                        Department.findOne({"dept_HOD.hod_email": Email}, (error, rs) => {
-                                                            if(error) throw error;
-                                                            else {
-                                                                if(rs) {
-                                                                    res.status(200).json({"Message": "HOD already assigned to department"});
-                                                                } else {
-                                                                    Department.findOneAndUpdate({_id: Department_ID}, 
-                                                                        {
-                                                                            dept_HOD: {
-                                                                                hod_id: Employee_ID,
-                                                                                hod_first_name: First_Name,
-                                                                                hod_last_name: Last_Name,
-                                                                                hod_email: Email
-                                                                            }
-                                                                        },
-                                                                        {new: true},
-                                                                        async (error, deptUpdated) => {
-                                                                            if(error) throw error;
-                                                                            else {
-                                                                                const newHod = new Hod({employee_id: Employee_ID,
-                                                                                    staff_ID: Staff_ID,
-                                                                                    hod_first_name: First_Name,
-                                                                                    hod_last_name: Last_Name, 
-                                                                                    hod_email: Email, 
-                                                                                    department: {
-                                                                                        dept_id: Department_ID,
-                                                                                        dept_name: Department_Name 
-                                                                                    } 
-                                                                                });
-                                                                                await newHod.save();
-                                                                                res.status(200).json(deptUpdated);
-                                                                            }
+    const emptyFields = [];
+    if(!req.body.dept_HOD_email) {
+        emptyFields.push("hod_email");
+    } 
+    if(emptyFields.length > 0) {
+        res.status(400).json({"Message": "Fill in the appropriate field", emptyFields})
+    } else {
+        const double_space = /\s\s/
+        const correct_language = /^[\w.+\-]+@gmail\.com$/
+        if(double_space.test(req.body.dept_HOD_email)) {
+            res.status(400).json({"Message": "Invalid email"})
+        } else if(correct_language.test(req.body.dept_HOD_email)){
+            const Department_ID = req.params.dept_id;
+            try {
+                Enrollment.findOne({email: req.body.dept_HOD_email, status: "Active"}, (error, rs) => {
+                    if(error) throw error;
+                    else {
+                        if(rs) {
+                            let Employee_ID = rs._id;
+                            let Staff_ID = rs.staff_ID;
+                            let First_Name = rs.first_name;
+                            let Last_Name = rs.last_name;
+                            let Email = rs.email;
+                            let Employee_Department = rs.department;
+                            Department.findOne({_id: Department_ID}, (error, rs) => {
+                                if(error) throw error;
+                                else {
+                                    if(rs) {
+                                        Department.findOne({"dept_HOD.hod_email": Email}, (error, rs) => {
+                                            if(error) throw error;
+                                            else {
+                                                if(rs) {
+                                                    res.status(400).json({"Message": "HOD already assigned to department"});
+                                                } else {
+                                                    Department.findOne({_id: Department_ID, dept_name: Employee_Department}, (error, rs) => {
+                                                        if(error) throw error;
+                                                        else {
+                                                            if(rs) {
+                                                                const Department_Name = rs.dept_name;
+                                                                Hod.findOne({"department.dept_id": Department_ID}, (error, hod_exists) => {
+                                                                    if(error) throw error;
+                                                                    else {
+                                                                        if(hod_exists) {
+                                                                            res.status(400).json({"Message": "Department already has a HOD"});
+                                                                        } else {
+                                                                            Department.findOneAndUpdate({_id: Department_ID}, 
+                                                                                {
+                                                                                    dept_HOD: {
+                                                                                        hod_id: Employee_ID,
+                                                                                        hod_first_name: First_Name,
+                                                                                        hod_last_name: Last_Name,
+                                                                                        hod_email: Email
+                                                                                    }
+                                                                                },
+                                                                                {new: true},
+                                                                                async (error, updated_department) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        const newHod = new Hod({employee_id: Employee_ID,
+                                                                                            staff_ID: Staff_ID,
+                                                                                            hod_first_name: First_Name,
+                                                                                            hod_last_name: Last_Name, 
+                                                                                            hod_email: Email, 
+                                                                                            department: {
+                                                                                                dept_id: Department_ID,
+                                                                                                dept_name: Department_Name 
+                                                                                            } 
+                                                                                        });
+                                                                                        await newHod.save();
+                                                                                        res.status(200).json({"Message": "HOD assigned successfully",updated_department});
+                                                                                    }
+                                                                                }
+                                                                            )
                                                                         }
-                                                                    )
-                                                                }
+                                                                    }
+                                                                })
+                                                            } else {
+                                                                res.status(400).json({"Message": "Employee cannot head another department"});
                                                             }
-                                                        })
-                                                    }
+                                                        }
+                                                    })
                                                 }
-                                            })
-                                        } else {
-                                            res.status(400).json({"Message": "Employee cannot head another department"});
-                                        }
+                                            }
+                                        })
+                                        // 
+                                    } else {
+                                        res.status(404).json({"Message": "Department not found"});
                                     }
-                                })
-                            } else {
-                                res.status(404).json({"Message": "Department not found"});
-                            }
+                                }
+                            })
+                        } else {
+                            res.status(404).json({"Message": "Employee not found"});
                         }
-                    })
-                } else {
-                    res.status(404).json({"Message": "Employee not found"});
-                }
+                    }
+                }); // first employee model
+            } catch (error) {
+                next(error);
             }
-        }); // first employee model
-    } catch (error) {
-        next(error);
+        } else {
+            res.status(400).json({"Message": "Domain name should be @gmail.com"})
+        }
     }
 }
 

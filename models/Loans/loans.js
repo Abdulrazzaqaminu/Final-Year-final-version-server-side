@@ -45,7 +45,6 @@ const LoanSchema = new mongoose.Schema({
     loan_details: {
         type: String,
         required: true,
-        lowercase: true
     }
 }, {timestamps: true})
 

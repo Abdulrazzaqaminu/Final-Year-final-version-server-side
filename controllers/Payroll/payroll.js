@@ -32,13 +32,13 @@ const getSpecificPayroll = async (req, res, next) => {
 
 const getPayrolls = async (req, res, next) => {
     try {
-        Payroll.find({}, (error, payroll) => {
+        Payroll.find({}, (error, result) => {
             if(error) throw error;
             else {
-                if (payroll.length > 0) {
-                    res.status(200).json(payroll);
+                if (result.length > 0) {
+                    res.status(200).json(result);
                 } else {
-                    res.status(404).json({"Message": "No employees enrolled so no payrolls"});
+                    res.status(404).json({"Message": "No employee payrolls", result});
                 }
             }
         });

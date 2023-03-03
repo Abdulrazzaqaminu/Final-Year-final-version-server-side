@@ -9,13 +9,13 @@ const attendanceHistory = async (req, res, next) => {
                 $gte: from,
                 $lte: to
             }
-        }, (error, history) => {
+        }, (error, result) => {
             if(error) throw error;
             else {
-                if(history.length > 0){
-                    res.status(200).json(history);
+                if(result.length > 0){
+                    res.status(200).json(result);
                 } else {
-                    res.status(200).json(history);
+                    res.status(404).json({"Message": "No records found",result});
                 }
             }
         });
