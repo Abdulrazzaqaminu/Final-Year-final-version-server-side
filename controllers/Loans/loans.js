@@ -23,7 +23,7 @@ const loanPayment = async (req, res, next) => {
         const double_space = /\s\s/
         const correct_language = /^[a-zA-Z]+(\s+[a-zA-Z]+)*$/
         if(double_space.test(req.body.loan_details)) {
-            res.status(400).json({"Message": "Invalid description"})
+            res.status(400).json({"Message": "Invalid whitespace at description"})
         } else if(correct_language.test(req.body.loan_details)) {
             Enrollment.find({staff_ID: req.body.staff_ID}, (error, result) => {
                 if(error) throw error;

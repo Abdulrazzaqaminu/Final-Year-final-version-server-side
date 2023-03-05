@@ -102,7 +102,7 @@ const assign_hod = async (req, res, next) => {
                 next(error);
             }
         } else {
-            res.status(400).json({"Message": "Domain name should be @gmail.com"})
+            res.status(400).json({"Message": "Email should end with @gmail.com"})
         }
     }
 }
