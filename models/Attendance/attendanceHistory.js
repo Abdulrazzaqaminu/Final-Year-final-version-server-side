@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const AttendanceHistorySchema = mongoose.Schema({
+const AttendanceHistorySchema = new mongoose.Schema({
     staff_ID: {
         type: String,
         required: true

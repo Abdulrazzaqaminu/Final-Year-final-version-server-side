@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const EntrySchema = mongoose.Schema({
+const EntrySchema = new mongoose.Schema({
     staff_ID: {
         type: String,
         required: true

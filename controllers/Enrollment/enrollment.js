@@ -9,6 +9,7 @@ const Entry = require("../../models/Attendance/entry");
 const Exit = require("../../models/Attendance/exit");
 const WorkingHours = require("../../models/Attendance/working_hours");
 const DailyPay = require("../../models/Daily_Pay/daily_pay");
+const Leave = require("../../models/Leave/leave");
 const qrcode = require("qrcode");
 
 const enrollEmployee = async (req, res, next) => {
@@ -422,7 +423,17 @@ const edit_employee = async (req, res, next) => {
                                                                                                                                                         (error, dailypay) => {
                                                                                                                                                             if(error) throw error;
                                                                                                                                                             else {
-                                                                                                                                                                res.status(200).json({"Message": "Employee updated", employee});
+                                                                                                                                                                Leave.updateMany({email: EMAIL, staff_ID: STAFF_ID}, 
+                                                                                                                                                                    {
+                                                                                                                                                                        first_name: req.body.first_name,
+                                                                                                                                                                        last_name: req.body.last_name,
+                                                                                                                                                                    },
+                                                                                                                                                                    (error, rs) => {
+                                                                                                                                                                    if(error) throw error;
+                                                                                                                                                                    else {
+                                                                                                                                                                        res.status(200).json({"Message": "Employee updated", employee});
+                                                                                                                                                                    }
+                                                                                                                                                                })
                                                                                                                                                             }
                                                                                                                                                         }
                                                                                                                                                     );
@@ -536,7 +547,17 @@ const edit_employee = async (req, res, next) => {
                                                                                                                                             (error, dailypay) => {
                                                                                                                                                 if(error) throw error;
                                                                                                                                                 else {
-                                                                                                                                                    res.status(200).json({"Message": "Employee updated", employee});
+                                                                                                                                                    Leave.updateMany({email: EMAIL, staff_ID: STAFF_ID}, 
+                                                                                                                                                        {
+                                                                                                                                                            first_name: req.body.first_name,
+                                                                                                                                                            last_name: req.body.last_name,
+                                                                                                                                                        },
+                                                                                                                                                        (error, rs) => {
+                                                                                                                                                        if(error) throw error;
+                                                                                                                                                        else {
+                                                                                                                                                            res.status(200).json({"Message": "Employee updated", employee});
+                                                                                                                                                        }
+                                                                                                                                                    })
                                                                                                                                                 }
                                                                                                                                             }
                                                                                                                                         );

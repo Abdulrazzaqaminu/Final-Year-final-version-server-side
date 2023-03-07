@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const WorkingHoursSchema = mongoose.Schema({
+const WorkingHoursSchema = new mongoose.Schema({
     staff_ID: {
         type: String,
         required: true

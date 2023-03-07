@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ExitSchema = mongoose.Schema({
+const ExitSchema = new mongoose.Schema({
     staff_ID: {
         type: String,
         required: true

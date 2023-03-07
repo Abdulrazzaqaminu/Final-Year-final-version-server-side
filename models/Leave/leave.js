@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const LoanSchema = new mongoose.Schema({
+const LeaveSchema = new mongoose.Schema({
     staff_ID: {
         type: String,
         required: true
@@ -18,34 +18,39 @@ const LoanSchema = new mongoose.Schema({
         required: true,
         lowercase: true
     },
-    loan_amount: {
-        type: Number,
+    leave_type: {
+        type: String,
         required: true
     },
     approval_date: {
         type: String,
         required: true
     },
-    employee_ID: {
-        type: [
-            String
-        ],
-    },
-    loan_duration : {
-        from: {
+    leave_duration : {
+        start: {
             type: String,
             required: true
         },
-        to: {
+        end: {
             type: String,
             required: true
         }
     },
-    loan_details: {
+    paid: {
+        type: Boolean,
+        default: true
+    },
+    days_on_leave: {
+        type: Number
+    },
+    leave_pay: {
+        type: Number
+    },
+    status: {
         type: String,
-        required: true,
+        default: "On Leave"
     }
 }, {timestamps: true})
 
-const Loans = mongoose.model("Loan", LoanSchema);
-module.exports = Loans;
+const Leave = mongoose.model("Leave", LeaveSchema);
+module.exports = Leave;
