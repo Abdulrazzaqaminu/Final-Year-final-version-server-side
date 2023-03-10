@@ -227,7 +227,7 @@ const getEmployees = async (req, res, next) => {
                     res.status(404).json({"Message": "No employees enrolled", result});
                 }
             }
-        });
+        }).sort({createdAt: -1})
     } catch (error) {
         next(error);
     }

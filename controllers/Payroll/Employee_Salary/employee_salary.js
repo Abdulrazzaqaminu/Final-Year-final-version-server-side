@@ -2,6 +2,7 @@ const Enrollment = require("../../../models/Enrollment/enrollment");
 const Payroll = require("../../../models/Payroll/payroll");
 const WorkingHours = require("../../../models/Attendance/working_hours");
 const DailyPay = require("../../../models/Daily_Pay/daily_pay");
+const Leave = require("../../../models/Leave/leave");
 
 const salary_calculator = async (req, res, next) =>{
     // number of weekends in current month
@@ -57,115 +58,255 @@ const salary_calculator = async (req, res, next) =>{
                             if(employee.length > 0) {
                                 // console.log(email+" "+gross);
                                 // console.log(empInfo);
-                                WorkingHours.aggregate([
+                                Leave.aggregate([
                                     {
-                                        // checking if emails match
                                         $match: {
-                                            email: email,
-                                       }
+                                            email: email
+                                        }
                                     },
                                     {
-                                        // suming up employees hours worked
                                         $group: {
                                             _id: "$email",
-                                            total_hours: {
-                                                $sum: "$hours.worked_hours"
-                                            },
-                                            total_extra_hours: {
-                                                $sum: "$hours.extra_hours"
-                                            },
-                                            days_worked: {
-                                                $sum: 1
-                                            }                     
-                                        } 
-                                    },
-                                ],  (error, employee) => {
+                                            total_leave_pay: {
+                                                $sum: "$leave_pay"
+                                            }
+                                        }
+                                    }
+                                ], (error, rs) => {
                                     if(error) throw error;
                                     else {
-                                        if(employee.length > 0) {
-                                            let total_hours_worked = employee[0].total_hours;
-                                            let total_worked_days = employee[0].days_worked;
-                                            let total_overtime_hours = employee[0].total_extra_hours;
-                                            DailyPay.aggregate([
+                                        if(rs.length > 0) {
+                                            let leave_pay = parseFloat((((rs[0].total_leave_pay).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                            let leave_pay_formatted = (leave_pay).toLocaleString();
+                                            WorkingHours.aggregate([
                                                 {
+                                                    // checking if emails match
                                                     $match: {
-                                                        email: email
+                                                        email: email,
                                                     }
                                                 },
                                                 {
+                                                    // suming up employees hours worked
                                                     $group: {
                                                         _id: "$email",
-                                                        total_netsalary: {
-                                                            $sum: "$net_salary.netsalary"
+                                                        total_hours: {
+                                                            $sum: "$hours.worked_hours"
+                                                        },
+                                                        total_extra_hours: {
+                                                            $sum: "$hours.extra_hours"
+                                                        },
+                                                        days_worked: {
+                                                            $sum: 1
+                                                        }                     
+                                                    } 
+                                                },
+                                            ],  (error, employee) => {
+                                                if(error) throw error;
+                                                else {
+                                                    if(employee.length > 0) {
+                                                        let total_hours_worked = employee[0].total_hours;
+                                                        let total_worked_days = employee[0].days_worked;
+                                                        let total_overtime_hours = employee[0].total_extra_hours;
+                                                        DailyPay.aggregate([
+                                                            {
+                                                                $match: {
+                                                                    email: email
+                                                                }
+                                                            },
+                                                            {
+                                                                $group: {
+                                                                    _id: "$email",
+                                                                    total_netsalary: {
+                                                                        $sum: "$net_salary.netsalary"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ], (error, rs) => {
+                                                            if(error) throw error
+                                                            else {
+                                                                const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                const Net_Salary_Formatted = (Net_Salary).toLocaleString();
+                                                                if(Employee_Type === "Full-Time") {
+                                                                    res.status(200).json({
+                                                                        "Staff_ID" : Staff_ID,
+                                                                        "First_Name" : Employee_First_Name,
+                                                                        "Last_Name" : Employee_Last_Name,
+                                                                        "Employee_Email": email,
+                                                                        "Position" : Employee_Position,
+                                                                        "Grade" : Employee_Grade,
+                                                                        "Employee_Type": Employee_Type,
+                                                                        "Days_Worked": total_worked_days,
+                                                                        "Hours_Worked": total_hours_worked,
+                                                                        "Extra_Hours": total_overtime_hours,
+                                                                        "Leave_pay": `NGN ${leave_pay_formatted}`,
+                                                                        "Net_Salary": `NGN ${Net_Salary_Formatted}`
+                                                                    });
+                                                                } else {
+                                                                    res.status(200).json({
+                                                                        "Staff_ID" : Staff_ID,
+                                                                        "First_Name" : Employee_First_Name,
+                                                                        "Last_Name" : Employee_Last_Name,
+                                                                        "Employee_Email": email,
+                                                                        "Position" : Employee_Position,
+                                                                        "Grade" : Employee_Grade,
+                                                                        "Employee_Type": Employee_Type,
+                                                                        "Days_Worked": total_worked_days,
+                                                                        "Hours_Worked": total_hours_worked,
+                                                                        "Net_Salary": `NGN ${Net_Salary_Formatted}`
+                                                                    });
+                                                                }
+                                                            }
+                                                        });
+                                                    } else {
+                                                        if(Employee_Type === "Full-Time") {
+                                                            const employee = {
+                                                                "Staff_ID" : Staff_ID,
+                                                                "First_Name" : Employee_First_Name,
+                                                                "Last_Name" : Employee_Last_Name,
+                                                                "Employee_Email": email,
+                                                                "Position" : Employee_Position,
+                                                                "Grade" : Employee_Grade,
+                                                                "Employee_Type": Employee_Type,
+                                                                "Days_Worked": 0,
+                                                                "Hours_Worked": 0,
+                                                                "Extra_Hours": 0,
+                                                                "Leave_pay": "NGN 0.00",
+                                                                "Net_Salary": "NGN 0.00"
+                                                            }
+                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                        } else {
+                                                            const employee = {
+                                                                "Staff_ID" : Staff_ID,
+                                                                "First_Name" : Employee_First_Name,
+                                                                "Last_Name" : Employee_Last_Name,
+                                                                "Employee_Email": email,
+                                                                "Position" : Employee_Position,
+                                                                "Grade" : Employee_Grade,
+                                                                "Employee_Type": Employee_Type,
+                                                                "Days_Worked": 0,
+                                                                "Hours_Worked": 0,
+                                                                "Net_Salary": "NGN 0.00"
+                                                            }
+                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
                                                         }
                                                     }
                                                 }
-                                            ], (error, rs) => {
-                                                if(error) throw error
+                                            })
+                                        } else {
+                                            WorkingHours.aggregate([
+                                                {
+                                                    // checking if emails match
+                                                    $match: {
+                                                        email: email,
+                                                   }
+                                                },
+                                                {
+                                                    // suming up employees hours worked
+                                                    $group: {
+                                                        _id: "$email",
+                                                        total_hours: {
+                                                            $sum: "$hours.worked_hours"
+                                                        },
+                                                        total_extra_hours: {
+                                                            $sum: "$hours.extra_hours"
+                                                        },
+                                                        days_worked: {
+                                                            $sum: 1
+                                                        }                     
+                                                    } 
+                                                },
+                                            ],  (error, employee) => {
+                                                if(error) throw error;
                                                 else {
-                                                    const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                                    const Net_Salary_Formatted = (Net_Salary).toLocaleString();
-                                                    if(Employee_Type === "Full-Time") {
-                                                        res.status(200).json({
-                                                            "Staff_ID" : Staff_ID,
-                                                            "First_Name" : Employee_First_Name,
-                                                            "Last_Name" : Employee_Last_Name,
-                                                            "Employee_Email": email,
-                                                            "Position" : Employee_Position,
-                                                            "Grade" : Employee_Grade,
-                                                            "Employee_Type": Employee_Type,
-                                                            "Days_Worked": total_worked_days,
-                                                            "Hours_Worked": total_hours_worked,
-                                                            "Extra_Hours": total_overtime_hours,
-                                                            "Net_Salary": `${"NGN "+Net_Salary_Formatted}`
+                                                    if(employee.length > 0) {
+                                                        let total_hours_worked = employee[0].total_hours;
+                                                        let total_worked_days = employee[0].days_worked;
+                                                        let total_overtime_hours = employee[0].total_extra_hours;
+                                                        DailyPay.aggregate([
+                                                            {
+                                                                $match: {
+                                                                    email: email
+                                                                }
+                                                            },
+                                                            {
+                                                                $group: {
+                                                                    _id: "$email",
+                                                                    total_netsalary: {
+                                                                        $sum: "$net_salary.netsalary"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ], (error, rs) => {
+                                                            if(error) throw error
+                                                            else {
+                                                                const Net_Salary = parseFloat((((rs[0].total_netsalary).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                                const Net_Salary_Formatted = (Net_Salary).toLocaleString();
+                                                                if(Employee_Type === "Full-Time") {
+                                                                    res.status(200).json({
+                                                                        "Staff_ID" : Staff_ID,
+                                                                        "First_Name" : Employee_First_Name,
+                                                                        "Last_Name" : Employee_Last_Name,
+                                                                        "Employee_Email": email,
+                                                                        "Position" : Employee_Position,
+                                                                        "Grade" : Employee_Grade,
+                                                                        "Employee_Type": Employee_Type,
+                                                                        "Days_Worked": total_worked_days,
+                                                                        "Hours_Worked": total_hours_worked,
+                                                                        "Extra_Hours": total_overtime_hours,
+                                                                        "Leave_pay": "NGN 0.00",
+                                                                        "Net_Salary": `NGN ${Net_Salary_Formatted}`
+                                                                    });
+                                                                } else {
+                                                                    res.status(200).json({
+                                                                        "Staff_ID" : Staff_ID,
+                                                                        "First_Name" : Employee_First_Name,
+                                                                        "Last_Name" : Employee_Last_Name,
+                                                                        "Employee_Email": email,
+                                                                        "Position" : Employee_Position,
+                                                                        "Grade" : Employee_Grade,
+                                                                        "Employee_Type": Employee_Type,
+                                                                        "Days_Worked": total_worked_days,
+                                                                        "Hours_Worked": total_hours_worked,
+                                                                        "Net_Salary": `NGN ${Net_Salary_Formatted}`
+                                                                    });
+                                                                }
+                                                            }
                                                         });
                                                     } else {
-                                                        res.status(200).json({
-                                                            "Staff_ID" : Staff_ID,
-                                                            "First_Name" : Employee_First_Name,
-                                                            "Last_Name" : Employee_Last_Name,
-                                                            "Employee_Email": email,
-                                                            "Position" : Employee_Position,
-                                                            "Grade" : Employee_Grade,
-                                                            "Employee_Type": Employee_Type,
-                                                            "Days_Worked": total_worked_days,
-                                                            "Hours_Worked": total_hours_worked,
-                                                            "Net_Salary": `${"NGN "+Net_Salary_Formatted}`
-                                                        });
+                                                        if(Employee_Type === "Full-Time") {
+                                                            const employee = {
+                                                                "Staff_ID" : Staff_ID,
+                                                                "First_Name" : Employee_First_Name,
+                                                                "Last_Name" : Employee_Last_Name,
+                                                                "Employee_Email": email,
+                                                                "Position" : Employee_Position,
+                                                                "Grade" : Employee_Grade,
+                                                                "Employee_Type": Employee_Type,
+                                                                "Days_Worked": 0,
+                                                                "Hours_Worked": 0,
+                                                                "Extra_Hours": 0,
+                                                                "Leave_pay": "NGN 0.00",
+                                                                "Net_Salary": "NGN 0.00"
+                                                            }
+                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                        } else {
+                                                            const employee = {
+                                                                "Staff_ID" : Staff_ID,
+                                                                "First_Name" : Employee_First_Name,
+                                                                "Last_Name" : Employee_Last_Name,
+                                                                "Employee_Email": email,
+                                                                "Position" : Employee_Position,
+                                                                "Grade" : Employee_Grade,
+                                                                "Employee_Type": Employee_Type,
+                                                                "Days_Worked": 0,
+                                                                "Hours_Worked": 0,
+                                                                "Net_Salary": "NGN 0.00"
+                                                            }
+                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                        }
                                                     }
                                                 }
-                                            });
-                                        } else {
-                                            if(Employee_Type === "Full-Time") {
-                                                const employee = {
-                                                    "Staff_ID" : Staff_ID,
-                                                    "First_Name" : Employee_First_Name,
-                                                    "Last_Name" : Employee_Last_Name,
-                                                    "Employee_Email": email,
-                                                    "Position" : Employee_Position,
-                                                    "Grade" : Employee_Grade,
-                                                    "Employee_Type": Employee_Type,
-                                                    "Days_Worked": 0,
-                                                    "Hours_Worked": 0,
-                                                    "Extra_Hours": 0,
-                                                    "Net_Salary": "NGN 0.00"
-                                                }
-                                                res.status(400).json({"Message": "Employee is yet to start work", employee});
-                                            } else {
-                                                const employee = {
-                                                    "Staff_ID" : Staff_ID,
-                                                    "First_Name" : Employee_First_Name,
-                                                    "Last_Name" : Employee_Last_Name,
-                                                    "Employee_Email": email,
-                                                    "Position" : Employee_Position,
-                                                    "Grade" : Employee_Grade,
-                                                    "Employee_Type": Employee_Type,
-                                                    "Days_Worked": 0,
-                                                    "Hours_Worked": 0,
-                                                    "Net_Salary": "NGN 0.00"
-                                                }
-                                                res.status(400).json({"Message": "Employee is yet to start work", employee});
-                                            }
+                                            })
                                         }
                                     }
                                 })

@@ -41,7 +41,7 @@ const getPayrolls = async (req, res, next) => {
                     res.status(404).json({"Message": "No employee payrolls", result});
                 }
             }
-        });
+        }).sort({createdAt: -1})
     } catch (error) {
         next(error);   
     }
