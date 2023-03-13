@@ -70,12 +70,14 @@ const recordAttendance = async (req, res, next) => {
                                                     if(error) throw error;
                                                     else {
                                                         if(result.length > 0) {
-                                                            const today = new Date();
-                                                            let h = (today.getHours());
-                                                            let in_time = result[0].in_time
-                                                            let checkin_hour = Number(in_time.split(":")[0]);
-                                                            let diff = h - checkin_hour;
-                                                            if(diff < 2) {
+                                                            let in_date = result[0].date;
+                                                            let in_time = result[0].in_time;
+                                                            let in_datetime = new Date(in_date+" "+in_time);
+                                                            let real_time = new Date();
+                                                            let diff_msec = real_time.getTime() - in_datetime.getTime()
+                                                            let diff_hours = Math.floor(diff_msec / 1000 / 60 / 60);
+
+                                                            if(diff_hours < 3) {
                                                                 res.status(400).json({"Message": "Working hours should exceed 2"})
                                                             }  else { 
                                                                 Entry.findOneAndDelete({email : Employee_Email}, async (error, result) => {
@@ -1323,7 +1325,6 @@ const recordAttendance = async (req, res, next) => {
                                                                 Exit.find({email: Employee_Email}, async (error, result) => { 
                                                                     if(error) throw error;
                                                                     else {
-                                                                        
                                                                         if(result.length > 0) {
                                                                             var day = new Date();
                                                                             var time = day.getTime()
