@@ -8,11 +8,11 @@ const findEmployee = async (req, res, next) => {
             else {
                 if(result.length > 0) {
                     let Employee_Email = result[0].email;
-                    Enrollment.findOne({email: Employee_Email, status: "Active"}, (error, employee) => {
+                    Enrollment.find({email: Employee_Email, status: "Active"}, (error, employee) => {
                         if(error) throw error;
                         else {
-                            if(employee) {
-                                res.status(200).json(employee);
+                            if(employee.length > 0) {
+                                res.status(200).json({"Message": "Employee found", employee});
                             } else {
                                 Enrollment.findOne({email: Employee_Email, status: "On Leave"}, (error, employee) => {
                                     if(error) throw error;
@@ -45,7 +45,14 @@ const findEmployee = async (req, res, next) => {
                                                                                     if(error) throw error;
                                                                                     else {
                                                                                         if(employee) {
-                                                                                            res.status(200).json(employee);
+                                                                                            Enrollment.find({email: Employee_Email, status: "Active"}, (error, employee) => {
+                                                                                                if(error) throw error;
+                                                                                                else {
+                                                                                                    if(employee.length > 0) {
+                                                                                                        res.status(200).json({"Message": "Employee found", employee});
+                                                                                                    }
+                                                                                                }
+                                                                                            })
                                                                                         }
                                                                                     }
                                                                                 })
