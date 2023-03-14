@@ -48,7 +48,7 @@ const LeaveSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: "On Leave"
+        default: "Approved"
     }
 }, {timestamps: true})
 

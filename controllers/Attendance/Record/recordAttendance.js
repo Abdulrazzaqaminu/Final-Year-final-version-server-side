@@ -1395,4 +1395,5 @@ const recordAttendance = async (req, res, next) => {
     }
     
 }
+
 module.exports = recordAttendance;
