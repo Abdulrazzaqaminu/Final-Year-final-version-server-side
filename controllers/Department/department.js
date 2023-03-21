@@ -39,45 +39,117 @@ const getSingledepartment = async (req, res, next) => {
 }
 
 const createDepartment = async (req, res, next) => {
-    const emptyFields = [];
+    let emptyFields = [];
+    let mapped_unit = req.body.unit.map((unit) => unit.unit_name)
+    let filter = mapped_unit.filter((unit) => unit === "")
     if(!req.body.dept_name) {
         emptyFields.push("dept_name");
+    } if(filter.length > 0) {
+        emptyFields.push("unit_name");
     }
     if(emptyFields.length > 0) {
-        res.status(400).json({"Message": "Fill in the appropriate field", emptyFields});
+        res.status(400).json({"Message": "Fill in the appropriate field(s)", emptyFields})
     } else {
-        const double_space = /\s\s/
-        const correct_language = /^[a-zA-Z]+(\s+[a-zA-Z]+)*$/
-        if(double_space.test(req.body.dept_name)) {
-            res.status(400).json({"Message": "Invalid department name"})
-        } else if(correct_language.test(req.body.dept_name)){
-            const newDepartment = new Department(req.body);
-            try {
-                Department.findOne({dept_name: req.body.dept_name}, (error, department) => {
-                    if(error) throw error;
-                    else {
-                        if(department){
-                            res.status(400).json({"Message": "Department name already exists"});
-                        } else {
-                            Unit.findOne({unit_name: req.body.dept_name}, async (error, unit) => {
-                                if(error) throw error;
-                                else {
-                                    if(unit) {
-                                        res.status(400).json({"Message": "Department name matches an existing unit"});
-                                    } else {
-                                        const DepartmentSaved = await newDepartment.save();
-                                        res.status(200).json({"Message": "Department created successfully",DepartmentSaved});
-                                    }
-                                }
-                            })
-                        }
-                    }
-                })
-            } catch (error) {
-                next(error);
-            }
+        const name_unit = req.body.unit.map((unit) => (unit.unit_name))
+
+        if(name_unit.includes(req.body.dept_name)) {
+            res.status(400).json({"Message": "Department name matches a unit name field"})
+        } else if(name_unit.length !== new Set(name_unit).size){
+            res.status(400).json({"Message": "Unit name fields are matching"})
         } else {
-            res.status(400).json({"Message": "Whitespace at the begining or end not acceptable"})
+            const double_space = /\s\s/
+            const correct_language = /^[a-zA-Z]+(\s+[a-zA-Z]+)*$/
+            if(double_space.test(req.body.dept_name)) {
+                res.status(400).json({"Message": "Invalid spacing at department name"})
+            } else if(correct_language.test(req.body.dept_name)) {
+                if(req.body.unit.length > 0) {
+                    let Invalid_unit_name = /\s\s/g
+                    let Unit_Name = /^[a-zA-Z]+(\s+[a-zA-Z]+)*$/g
+                    let Invalid_unit_name_match = req.body.unit.map((unit) => unit.unit_name.match(Invalid_unit_name));
+                    let unit_name_match = req.body.unit.map((unit) => (unit.unit_name.match(Unit_Name)));
+                    
+                    if((unit_name_match.filter((unit) => unit === null)).length > 0 || (Invalid_unit_name_match.filter((unit) => unit !== null)).length > 0) {
+                        res.status(400).json({"Message": "Invalid spacing at unit name"})
+                    } else {
+                        Department.findOne({dept_name: req.body.dept_name}, (error, dept) => {
+                            if(error) throw error;
+                            else {
+                                if(dept) {
+                                    res.status(400).json({"Message": "Department name already exists"});
+                                } else {
+                                    Unit.findOne({unit_name: req.body.dept_name}, (error, unit) => {
+                                        if(error) throw error;
+                                        else {
+                                            if(unit) {
+                                                res.status(400).json({"Message": "Department name matches an existing unit"});
+                                            } else {
+                                                Department.findOne(
+                                                    {
+                                                        dept_name: req.body.unit.map((unit) => (
+                                                            unit.unit_name
+                                                        ))
+                                                    },
+                                                    (error, dept) => {
+                                                    if(error) throw error;
+                                                    else {
+                                                        if(dept) {
+                                                            res.status(400).json({"Message": "Unit name matches an existing department"});
+                                                        } else {
+                                                            Unit.findOne(
+                                                                {
+                                                                    unit_name: req.body.unit.map((unit) => (
+                                                                        unit.unit_name
+                                                                    ))
+                                                                },
+                                                                async (error, unit) => {
+                                                                    if(error) throw error;
+                                                                    else {
+                                                                        if(unit) {
+                                                                            res.status(400).json({"Message": "Unit name already exists"});
+                                                                        } else {
+                                                                            const newDepartment = new Department({
+                                                                                dept_name: req.body.dept_name,
+                                                                                unit: (req.body.unit).map((unit) => (
+                                                                                    {
+                                                                                        unit_name: unit.unit_name
+                                                                                    }
+                                                                                ))
+                                                                            })
+                                                                            const newUnit = new Unit({
+                                                                                unit: req.body.unit.map((unit) => (
+                                                                                    {
+                                                                                        unit_name: unit.unit_name,
+                                                                                        dept_name: newDepartment.dept_name
+                                                                                    }
+                                                                                )),
+                                                                                dept: {
+                                                                                    dept_id: newDepartment._id,
+                                                                                    dept_name: newDepartment.dept_name
+                                                                                }
+                                                                            })
+                                                                            await newUnit.save();
+                                                                            const DepartmentSaved = await newDepartment.save();
+                                                                            res.status(200).json({"Message": "Department created successfully",DepartmentSaved});
+                                                                        }
+                                                                    }
+                                                                }
+                                                            )
+                                                        }
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        })
+                    }
+                } else {
+                    res.status(400).json({"Message": "Add at least 1 unit"})
+                }
+            } else {
+                res.status(400).json({"Message": "Invalid spacing at department name"})
+            }
         }
     }
 }
@@ -109,7 +181,7 @@ const updateDepartment = async (req, res, next) => {
                                     if(department) {
                                         res.status(400).json({"Message": "Department name already exists"});
                                     } else {
-                                        Unit.findOne({unit_name: req.body.dept_name}, async (error, unit) =>{
+                                        Unit.findOne({"unit.unit_name": req.body.dept_name}, async (error, unit) =>{
                                             if(error) throw error;
                                             else {
                                                 if(unit) {
@@ -146,6 +218,9 @@ const updateDepartment = async (req, res, next) => {
                                                                                             dept: {
                                                                                                 dept_id: Department_ID,
                                                                                                 dept_name: req.body.dept_name
+                                                                                            },
+                                                                                            $set: {
+                                                                                                "unit.dept_name": req.body.dept_name
                                                                                             }
                                                                                         },
                                                                                         (error, rs) => {

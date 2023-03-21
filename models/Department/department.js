@@ -27,9 +27,6 @@ const DepartmentSchema = new mongoose.Schema({
         uppercase: true
     },
     unit: [{
-        unit_id: {
-            type: String
-        },
         unit_name: {
             type: String,
             uppercase: true

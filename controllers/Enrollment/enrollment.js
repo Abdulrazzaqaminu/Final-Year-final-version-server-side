@@ -676,6 +676,8 @@ const unenroll = async (req, res, next) => {
                                                                                                     else {
                                                                                                         if(rs) {
                                                                                                             await DailyPay.deleteMany({employee_ID: Employee_ID})
+                                                                                                            await Entry.deleteMany({email: EMAIL})
+                                                                                                            await Exit.deleteMany({email: EMAIL})
                                                                                                             res.status(200).json({"Message": "Employee has been terminated"});
                                                                                                         }
                                                                                                     }
@@ -728,6 +730,8 @@ const unenroll = async (req, res, next) => {
                                                                                                                         else {
                                                                                                                             if(rs) {
                                                                                                                                 await DailyPay.deleteMany({employee_ID: Employee_ID})
+                                                                                                                                await Entry.deleteMany({email: EMAIL})
+                                                                                                                                await Exit.deleteMany({email: EMAIL})
                                                                                                                                 res.status(200).json({"Message": "Employee has been terminated"});
                                                                                                                             }
                                                                                                                         }
@@ -771,6 +775,8 @@ const unenroll = async (req, res, next) => {
                                                                                     else {
                                                                                         if(rs) {
                                                                                             await DailyPay.deleteMany({employee_ID: Employee_ID})
+                                                                                            await Entry.deleteMany({email: EMAIL})
+                                                                                            await Exit.deleteMany({email: EMAIL})
                                                                                             res.status(200).json({"Message": "Employee has been terminated"});
                                                                                         }
                                                                                     }
@@ -797,6 +803,8 @@ const unenroll = async (req, res, next) => {
                                                                                                         else {
                                                                                                             if(rs) {
                                                                                                                 await DailyPay.deleteMany({employee_ID: Employee_ID})
+                                                                                                                await Entry.deleteMany({email: EMAIL})
+                                                                                                                await Exit.deleteMany({email: EMAIL})
                                                                                                                 res.status(200).json({"Message": "Employee has been terminated"});
                                                                                                             }
                                                                                                         }
