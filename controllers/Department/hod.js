@@ -167,7 +167,9 @@ const removeHod = async (req, res, next) => {
                     }, (error, department) => {
                         if(error) throw error;
                         else {
-                            res.status(200).json({"Message": "Hod removed successfully"});
+                            if(department) {
+                                res.status(200).json({"Message": "Hod removed successfully"});
+                            }
                         }
                     })
                 } else {

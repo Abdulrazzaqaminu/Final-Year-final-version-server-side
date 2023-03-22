@@ -213,20 +213,32 @@ const updateDepartment = async (req, res, next) => {
                                                                             (error, rs) => {
                                                                                 if(error) throw error
                                                                                 else {
-                                                                                    Unit.updateMany({"dept.dept_id": Department_ID}, 
+                                                                                    Unit.findOneAndUpdate(
+                                                                                        // fields
+                                                                                        {
+                                                                                            "dept.dept_id": Department_ID,
+                                                                                            "unit.dept_name": Department_Name
+                                                                                        },
+                                                                                        // what to update to
                                                                                         {
                                                                                             dept: {
                                                                                                 dept_id: Department_ID,
                                                                                                 dept_name: req.body.dept_name
                                                                                             },
                                                                                             $set: {
-                                                                                                "unit.dept_name": req.body.dept_name
+                                                                                                "unit.$[field].dept_name": req.body.dept_name
                                                                                             }
+                                                                                        },
+                                                                                        // condition
+                                                                                        {
+                                                                                            arrayFilters: [{"field.dept_name": Department_Name}]
                                                                                         },
                                                                                         (error, rs) => {
                                                                                             if(error) throw error;
                                                                                             else {
-                                                                                                res.status(200).json({"Message": "Department name updated successfully",updated_department});
+                                                                                                if(rs) {
+                                                                                                    res.status(200).json({"Message": "Department name updated successfully",updated_department});
+                                                                                                }
                                                                                             }
                                                                                         }
                                                                                     )
@@ -335,69 +347,44 @@ const transfer = async (req, res, next) => {
                                     else {
                                         if(rs) {
                                             const Department_ID = rs._id
-                                            Unit.findOne({unit_name: req.body.unit_name}, (error, unit) => {
+                                            Unit.findOne({"unit.unit_name": req.body.unit_name},
+                                            {
+                                                unit: {
+                                                    $elemMatch: {
+                                                        unit_name: req.body.unit_name
+                                                    }
+                                                }
+                                            },
+                                            (error, unit) => {
                                                 if(error) throw error;
                                                 else {
                                                     if(unit) {
-                                                        const UNIT_NAME = unit.unit_name;
-                                                        const DEPARTMENT_NAME = unit.dept.dept_name
+                                                        const UNIT_NAME = unit.unit[0].unit_name;
+                                                        const DEPARTMENT_NAME = unit.unit[0].dept_name;
                                                         Department.findOne({_id: Department_ID, "unit.unit_name": UNIT_NAME}, (error, dept) => {
                                                             if(error) throw error;
                                                             else {
                                                                 if(dept) {
-                                                                    Enrollment.findOne({_id: Employee_ID, department: "N/A"}, (error, rs) => {
+                                                                    Unit.findOne({
+                                                                        unit: {
+                                                                            $elemMatch: {
+                                                                                employee_ids: Employee_ID,
+                                                                                unit_name: UNIT_NAME
+                                                                            }
+                                                                        }
+                                                                    }, (error, same_unit) => {
                                                                         if(error) throw error;
                                                                         else {
-                                                                            if(rs) {
-                                                                                Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME},
-                                                                                    {
-                                                                                        $push: {
-                                                                                            employee_ids: Employee_ID
-                                                                                        }
-                                                                                    },
-                                                                                    (error, updated_dept) => {
-                                                                                        if(error) throw error;
-                                                                                        else {
-                                                                                            if(updated_dept) {
-                                                                                                Unit.findOneAndUpdate({unit_name: UNIT_NAME}, 
-                                                                                                    {
-                                                                                                        $push: {
-                                                                                                            employee_ids: Employee_ID
-                                                                                                        }
-                                                                                                    },
-                                                                                                    (error, new_unit) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            if(new_unit) {
-                                                                                                                Enrollment.findOneAndUpdate({_id: Employee_ID}, 
-                                                                                                                    {
-                                                                                                                        department: DEPARTMENT_NAME,
-                                                                                                                        unit: UNIT_NAME
-                                                                                                                    },
-                                                                                                                    (error, employee) => {
-                                                                                                                    if(error) throw error;
-                                                                                                                    else {
-                                                                                                                        if(employee) {
-                                                                                                                            res.status(200).json({"Message": "Successfully transfered employee", employee})
-                                                                                                                        }
-                                                                                                                    }
-                                                                                                                })
-                                                                                                            }
-                                                                                                        }
-                                                                                                    }
-                                                                                                )
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                )
+                                                                            if(same_unit) {
+                                                                                res.status(400).json({"Message": "Employee is already under unit"})
                                                                             } else {
-                                                                                Enrollment.findOne({_id: Employee_ID, unit: "N/A"}, (error, rs) => {
+                                                                                Enrollment.findOne({_id: Employee_ID, department: "N/A"}, (error, rs) => {
                                                                                     if(error) throw error;
                                                                                     else {
                                                                                         if(rs) {
-                                                                                            Department.findOneAndUpdate({employee_ids: Employee_ID},
+                                                                                            Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME},
                                                                                                 {
-                                                                                                    $pull: {
+                                                                                                    $push: {
                                                                                                         employee_ids: Employee_ID
                                                                                                     }
                                                                                                 },
@@ -405,43 +392,29 @@ const transfer = async (req, res, next) => {
                                                                                                     if(error) throw error;
                                                                                                     else {
                                                                                                         if(updated_dept) {
-                                                                                                            Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME},
+                                                                                                            Unit.findOneAndUpdate({"unit.unit_name": UNIT_NAME}, 
                                                                                                                 {
                                                                                                                     $push: {
-                                                                                                                        employee_ids: Employee_ID
+                                                                                                                        "unit.$.employee_ids": Employee_ID
                                                                                                                     }
                                                                                                                 },
-                                                                                                                (error, new_dept) => {
+                                                                                                                (error, new_unit) => {
                                                                                                                     if(error) throw error;
                                                                                                                     else {
-                                                                                                                        if(new_dept) {
-                                                                                                                            Unit.findOneAndUpdate({unit_name: UNIT_NAME}, 
+                                                                                                                        if(new_unit) {
+                                                                                                                            Enrollment.findOneAndUpdate({_id: Employee_ID}, 
                                                                                                                                 {
-                                                                                                                                    $push: {
-                                                                                                                                        employee_ids: Employee_ID
-                                                                                                                                    }
+                                                                                                                                    department: DEPARTMENT_NAME,
+                                                                                                                                    unit: UNIT_NAME
                                                                                                                                 },
-                                                                                                                                (error, new_unit) => {
-                                                                                                                                    if(error) throw error;
-                                                                                                                                    else {
-                                                                                                                                        if(new_unit) {
-                                                                                                                                            Enrollment.findOneAndUpdate({_id: Employee_ID}, 
-                                                                                                                                                {
-                                                                                                                                                    department: DEPARTMENT_NAME,
-                                                                                                                                                    unit: UNIT_NAME
-                                                                                                                                                },
-                                                                                                                                                (error, employee) => {
-                                                                                                                                                if(error) throw error;
-                                                                                                                                                else {
-                                                                                                                                                    if(employee) {
-                                                                                                                                                        res.status(200).json({"Message": "Successfully transfered employee", employee})
-                                                                                                                                                    }
-                                                                                                                                                }
-                                                                                                                                            })
-                                                                                                                                        }
+                                                                                                                                (error, employee) => {
+                                                                                                                                if(error) throw error;
+                                                                                                                                else {
+                                                                                                                                    if(employee) {
+                                                                                                                                        res.status(200).json({"Message": "Successfully transfered employee", employee})
                                                                                                                                     }
                                                                                                                                 }
-                                                                                                                            )
+                                                                                                                            })
                                                                                                                         }
                                                                                                                     }
                                                                                                                 }
@@ -451,56 +424,119 @@ const transfer = async (req, res, next) => {
                                                                                                 }
                                                                                             )
                                                                                         } else {
-                                                                                            Department.findOneAndUpdate({employee_ids: Employee_ID},
-                                                                                                {
-                                                                                                    $pull: {
-                                                                                                        employee_ids: Employee_ID
-                                                                                                    }
-                                                                                                },
-                                                                                                (error, updated_dept) => {
+                                                                                            Enrollment.findOne({_id: Employee_ID, unit: "N/A"}, (error, rs) => {
                                                                                                 if(error) throw error;
                                                                                                 else {
-                                                                                                    if(updated_dept) {
-                                                                                                        Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME}, 
+                                                                                                    if(rs) {
+                                                                                                        Department.findOneAndUpdate({employee_ids: Employee_ID},
                                                                                                             {
-                                                                                                                $push: {
+                                                                                                                $pull: {
                                                                                                                     employee_ids: Employee_ID
                                                                                                                 }
                                                                                                             },
-                                                                                                            (error, new_dept) => {
+                                                                                                            (error, updated_dept) => {
+                                                                                                                if(error) throw error;
+                                                                                                                else {
+                                                                                                                    if(updated_dept) {
+                                                                                                                        Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME},
+                                                                                                                            {
+                                                                                                                                $push: {
+                                                                                                                                    employee_ids: Employee_ID
+                                                                                                                                }
+                                                                                                                            },
+                                                                                                                            (error, new_dept) => {
+                                                                                                                                if(error) throw error;
+                                                                                                                                else {
+                                                                                                                                    if(new_dept) {
+                                                                                                                                        Unit.findOneAndUpdate({"unit.unit_name": UNIT_NAME}, 
+                                                                                                                                            {
+                                                                                                                                                $push: {
+                                                                                                                                                    "unit.$.employee_ids": Employee_ID
+                                                                                                                                                }
+                                                                                                                                            },
+                                                                                                                                            (error, new_unit) => {
+                                                                                                                                                if(error) throw error;
+                                                                                                                                                else {
+                                                                                                                                                    if(new_unit) {
+                                                                                                                                                        Enrollment.findOneAndUpdate({_id: Employee_ID}, 
+                                                                                                                                                            {
+                                                                                                                                                                department: DEPARTMENT_NAME,
+                                                                                                                                                                unit: UNIT_NAME
+                                                                                                                                                            },
+                                                                                                                                                            (error, employee) => {
+                                                                                                                                                            if(error) throw error;
+                                                                                                                                                            else {
+                                                                                                                                                                if(employee) {
+                                                                                                                                                                    res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                                                }
+                                                                                                                                                            }
+                                                                                                                                                        })
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        )
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        )
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        )
+                                                                                                    } else {
+                                                                                                        Department.findOneAndUpdate({employee_ids: Employee_ID},
+                                                                                                            {
+                                                                                                                $pull: {
+                                                                                                                    employee_ids: Employee_ID
+                                                                                                                }
+                                                                                                            },
+                                                                                                            (error, updated_dept) => {
                                                                                                             if(error) throw error;
                                                                                                             else {
-                                                                                                                if(new_dept) {
-                                                                                                                    Unit.findOneAndUpdate({employee_ids: Employee_ID}, 
+                                                                                                                if(updated_dept) {
+                                                                                                                    Department.findOneAndUpdate({dept_name: DEPARTMENT_NAME}, 
                                                                                                                         {
-                                                                                                                            $pull: {
+                                                                                                                            $push: {
                                                                                                                                 employee_ids: Employee_ID
                                                                                                                             }
                                                                                                                         },
-                                                                                                                        (error, updated_unit) => {
+                                                                                                                        (error, new_dept) => {
                                                                                                                         if(error) throw error;
                                                                                                                         else {
-                                                                                                                            if(updated_unit) {
-                                                                                                                                Unit.findOneAndUpdate({unit_name: UNIT_NAME}, 
+                                                                                                                            if(new_dept) {
+                                                                                                                                Unit.findOneAndUpdate({"unit.employee_ids": Employee_ID}, 
                                                                                                                                     {
-                                                                                                                                        $push: {
-                                                                                                                                            employee_ids: Employee_ID
+                                                                                                                                        $pull: {
+                                                                                                                                            "unit.$.employee_ids": Employee_ID
                                                                                                                                         }
                                                                                                                                     },
-                                                                                                                                    (error, new_unit) => {
+                                                                                                                                    (error, updated_unit) => {
                                                                                                                                     if(error) throw error;
                                                                                                                                     else {
-                                                                                                                                        if(new_unit) {
-                                                                                                                                            Enrollment.findOneAndUpdate({_id: Employee_ID}, 
+                                                                                                                                        if(updated_unit) {
+                                                                                                                                            Unit.findOneAndUpdate({"unit.unit_name": UNIT_NAME}, 
                                                                                                                                                 {
-                                                                                                                                                    department: DEPARTMENT_NAME,
-                                                                                                                                                    unit: UNIT_NAME
+                                                                                                                                                    $push: {
+                                                                                                                                                        "unit.$.employee_ids": Employee_ID
+                                                                                                                                                    }
                                                                                                                                                 },
-                                                                                                                                                (error, employee) => {
+                                                                                                                                                (error, new_unit) => {
                                                                                                                                                 if(error) throw error;
                                                                                                                                                 else {
-                                                                                                                                                    if(employee) {
-                                                                                                                                                        res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                                    if(new_unit) {
+                                                                                                                                                        Enrollment.findOneAndUpdate({_id: Employee_ID}, 
+                                                                                                                                                            {
+                                                                                                                                                                department: DEPARTMENT_NAME,
+                                                                                                                                                                unit: UNIT_NAME
+                                                                                                                                                            },
+                                                                                                                                                            (error, employee) => {
+                                                                                                                                                            if(error) throw error;
+                                                                                                                                                            else {
+                                                                                                                                                                if(employee) {
+                                                                                                                                                                    res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                                                }
+                                                                                                                                                            }
+                                                                                                                                                        })
                                                                                                                                                     }
                                                                                                                                                 }
                                                                                                                                             })
