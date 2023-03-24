@@ -11,7 +11,7 @@ const {
 // get all departments
 router.get("/", getAllDepartments);
 // get single departments
-router.get("/:dept_id", getSingledepartment);
+router.get("/filter", getSingledepartment);
 // create department
 router.post("/", createDepartment);
 // update department

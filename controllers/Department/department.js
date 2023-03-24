@@ -21,18 +21,37 @@ const getAllDepartments = async (req, res, next) => {
 }
 
 const getSingledepartment = async (req, res, next) => {
-    const Department_ID = req.params.dept_id;
+    const { dept_name } = req.query;
     try {
-        Department.find({_id: Department_ID}, (err, rs) => {
+        Department.find({}, (err, dept) => {
             if(err) throw err;
             else {
-                if(rs.length > 0) {
-                    res.status(200).json(rs);
+                if(dept.length > 0) {
+                    Department.find({dept_name: dept_name}, (error, result) => {
+                        if(error) throw error;
+                        else {
+                            if(result.length > 0) {
+                                Unit.find({"dept.dept_name": dept_name}, (error, unit) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(unit.length > 0) {
+                                            const units = unit;
+                                            res.status(200).json({dept, units});
+                                        }
+                                    }
+                                })
+                            } else {
+                                res.status(200).json({dept});
+                            }
+                        }
+                    })
                 } else {
-                    res.status(404).json({"Message": "Department does not exist"});
+                    res.status(404).json({dept});
                 }
             }
         })
+        
+        
     } catch (error) {
         next(error);
     }

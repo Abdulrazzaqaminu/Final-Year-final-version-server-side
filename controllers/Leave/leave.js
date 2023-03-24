@@ -264,7 +264,7 @@ const requestLeave = async (req, res, next) => {
                                                                 res.status(400).json({"Message": "2 days worked is required before request for leave"})
                                                             }
                                                         } else {
-                                                            res.status(400).json({"Message": "Cannot request for leave with 0 working days"})
+                                                            res.status(400).json({"Message": "Cannot request for leave with 0 days worked"})
                                                         }
                                                     }
                                                 })

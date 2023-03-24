@@ -1,6 +1,7 @@
 const Enrollment = require("../../models/Enrollment/enrollment");
 const Payroll = require("../../models/Payroll/payroll");
 const Loans = require("../../models/Loans/loans");
+const WorkingHours = require("../../models/Attendance/working_hours");
 
 const loanPayment = async (req, res, next) => {
     const emptyFields = [];
@@ -30,16 +31,17 @@ const loanPayment = async (req, res, next) => {
                 else {
                     if(result.length > 0) {
                         try {
-                            let Employee_Email = result[0].email;
                             let Staff_ID = result[0].staff_ID;
                             let Employee_ID = result[0]._id;
                             let Employee_First_Name = result[0].first_name;
                             let Employee_Last_Name = result[0].last_name;
+                            let Employee_Email = result[0].email;
+                            let Gross = result[0].gross_salary;
                             Enrollment.find({email: Employee_Email, status: "Terminated"}, (error, result) => {
                                 if(error) throw error;
                                 else {
                                     if(result.length > 0) {
-                                        res.status(400).json({"Message": "Terminated employees cannot request for loans"});
+                                        res.status(400).json({"Message": "Employee terminated"});
                                     } else {
                                         const newLoan = new Loans({
                                             staff_ID: Staff_ID, first_name: Employee_First_Name, last_name: Employee_Last_Name,
@@ -57,16 +59,58 @@ const loanPayment = async (req, res, next) => {
                                                     res.status(400).json({"Message": "Employee has an unpaid loan"});
                                                 } else {
                                                     try {
-                                                        const savedLoan = await newLoan.save();
-                                                        Payroll.findOneAndUpdate({email: Employee_Email}, {
-                                                            $push: {
-                                                                loans:savedLoan.loan_amount
+                                                        WorkingHours.aggregate([
+                                                            {
+                                                                // checking if emails match
+                                                                $match: {
+                                                                    email: Employee_Email,
+                                                                }
                                                             },
-                                                        }, (error, rs) => {
+                                                            {
+                                                                // suming up employees hours worked
+                                                                $group: {
+                                                                    _id: "$email",
+                                                                    days_worked: {
+                                                                        $sum: 1
+                                                                    }                     
+                                                                } 
+                                                            },
+                                                        ], async (error, days) => {
                                                             if(error) throw error;
                                                             else {
-                                                                if(rs) {
-                                                                    res.status(200).json({"Message": "Loan was successful", savedLoan});
+                                                                if(days.length > 0) {
+                                                                    let total_worked_days = days[0].days_worked;
+                                                                    if(total_worked_days > 1) {
+                                                                        if(req.body.loan_amount > Gross) {
+                                                                            res.status(400).json({"Message": "Employee's gross is lower than loan amount"});
+                                                                        } else {
+                                                                            if(req.body.loan_amount < 15000) {
+                                                                                res.status(400).json({"Message": "Loan amount should be at least NGN 15,000"})
+                                                                            } else {
+                                                                                if(req.body.loan_duration.from > req.body.approval_date) {
+                                                                                    const savedLoan = await newLoan.save();
+                                                                                    Payroll.findOneAndUpdate({email: Employee_Email}, {
+                                                                                        $push: {
+                                                                                            loans:savedLoan.loan_amount
+                                                                                        },
+                                                                                    }, (error, rs) => {
+                                                                                        if(error) throw error;
+                                                                                        else {
+                                                                                            if(rs) {
+                                                                                                res.status(200).json({"Message": "Loan was successful", savedLoan});
+                                                                                            }
+                                                                                        }
+                                                                                    })
+                                                                                } else {
+                                                                                    res.status(400).json({"Message": "loan cannot start on or before approval date"})
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    } else {
+                                                                        res.status(400).json({"Message": "2 days worked is required before request for loan"})
+                                                                    }
+                                                                } else {
+                                                                    res.status(400).json({"Message": "Cannot request for loan with 0 days worked"})
                                                                 }
                                                             }
                                                         })
