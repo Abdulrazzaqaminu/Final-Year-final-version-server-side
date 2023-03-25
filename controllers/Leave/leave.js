@@ -63,200 +63,213 @@ const requestLeave = async (req, res, next) => {
                                                         if(days.length > 0) {
                                                             let total_worked_days = days[0].days_worked;
                                                             if(total_worked_days > 1) {
-                                                                Leave.findOne({staff_ID: Staff_ID, status: "On Leave"}, async (error, leave) => {
+                                                                Leave.findOne({staff_ID: Staff_ID, status: "Approved"}, async (error, approved) => {
                                                                     if(error) throw error;
                                                                     else {
-                                                                        if(leave) {
-                                                                            res.status(400).json({"Message": "Employee is still on leave"})
+                                                                        if(approved) {
+                                                                            res.status(400).json({"Message": "Employee already requested"});
                                                                         } else {
-                                                                            if(req.body.duration.start > req.body.approval_date) {
-                                                                                if(req.body.leave_type === "Bereavement leave" || req.body.leave_type === "Sabbatical leave" || req.body.leave_type === "Compassionate leave") {
-                                                                                    const newLeave = new Leave({
-                                                                                        staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                        email: Email, leave_type: req.body.leave_type, 
-                                                                                        approval_date: req.body.approval_date, paid: false,
-                                                                                        leave_duration: {
-                                                                                            start: req.body.duration.start,
-                                                                                            end: req.body.duration.end
-                                                                                        }, days_on_leave: days_on_leave
-                                                                                    })  
-                                                                                    const leave = await newLeave.save();
-                                                                                    res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                } else {
-                                                                                    if(req.body.leave_type === "Casual leave" && days_on_leave > 3) {
-                                                                                        res.status(400).json({"Message": "Casual leave duration exceeds 3 days"})
-                                                                                    } else if(req.body.leave_type === "Maternity leave" && days_on_leave > 120) {
-                                                                                        res.status(400).json({"Message": "Maternity leave duration exceeds 6 months"})
-                                                                                    } else if(req.body.leave_type === "Annual leave" && days_on_leave > 20) {
-                                                                                        res.status(400).json({"Message": "Annual leave duration exceeds 20 days"})
+                                                                            Leave.findOne({staff_ID: Staff_ID, status: "On Leave"}, async (error, leave) => {
+                                                                                if(error) throw error;
+                                                                                else {
+                                                                                    if(leave) {
+                                                                                        res.status(400).json({"Message": "Employee is still on leave"})
                                                                                     } else {
-                                                                                        let number_of_days_worked = days_on_leave / 252;
-                                                                                        if(Employee_Gross < 30000) {
-                                                                                            let netsalary_perleave_days = parseFloat((((Employee_Gross * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                        if(req.body.duration.start > req.body.approval_date) {
+                                                                                            if(req.body.duration.start === req.body.duration.end) {
+                                                                                                res.status(400).json({"Message": "Duration should be greater than 1 day"})
+                                                                                            } else {
+                                                                                                if(req.body.leave_type === "Bereavement leave" || req.body.leave_type === "Sabbatical leave" || req.body.leave_type === "Compassionate leave") {
+                                                                                                    const newLeave = new Leave({
+                                                                                                        staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                        email: Email, leave_type: req.body.leave_type, 
+                                                                                                        approval_date: req.body.approval_date, paid: false,
+                                                                                                        leave_duration: {
+                                                                                                            start: req.body.duration.start,
+                                                                                                            end: req.body.duration.end
+                                                                                                        }, days_on_leave: days_on_leave
+                                                                                                    })  
+                                                                                                    const leave = await newLeave.save();
+                                                                                                    res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                } else {
+                                                                                                    if(req.body.leave_type === "Casual leave" && days_on_leave > 3) {
+                                                                                                        res.status(400).json({"Message": "Casual leave duration exceeds 3 days"})
+                                                                                                    } else if(req.body.leave_type === "Maternity leave" && days_on_leave > 120) {
+                                                                                                        res.status(400).json({"Message": "Maternity leave duration exceeds 6 months"})
+                                                                                                    } else if(req.body.leave_type === "Annual leave" && days_on_leave > 20) {
+                                                                                                        res.status(400).json({"Message": "Annual leave duration exceeds 20 days"})
+                                                                                                    } else {
+                                                                                                        let number_of_days_worked = days_on_leave / 252;
+                                                                                                        if(Employee_Gross < 30000) {
+                                                                                                            let netsalary_perleave_days = parseFloat((((Employee_Gross * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                                
+                                                                                                            })  
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                        } else if(Employee_Gross >= 30000 && Employee_Gross < 625000) {
+                                                                                                            let relief_allowance = 0.2;
+                                                                                                                                                                    
+                                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
+                                                        
+                                                                                                            let taxable_income = Employee_Gross - statutory_relief
                                                                                                 
-                                                                                            })  
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                        } else if(Employee_Gross >= 30000 && Employee_Gross < 625000) {
-                                                                                            let relief_allowance = 0.2;
-                                                                                                                                                    
-                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
-                                        
-                                                                                            let taxable_income = Employee_Gross - statutory_relief
-                                                                                
-                                                                                            let first_300 = taxable_income - 0;
-                                                                                            let tax = first_300 * 0.07;
-                                    
-                                                                                            let netsalary = Employee_Gross - tax;
-                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
-                                                                                            })    
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                        } else if(Employee_Gross >= 625000 && Employee_Gross < 1000000) {
-                                                                                            let relief_allowance = 0.2;
-                                                                                                                                                    
-                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
-                                        
-                                                                                            let taxable_income = Employee_Gross - statutory_relief
-                                    
-                                                                                            let first_300 = 300000 * 0.07;
-                                                                                            let next_300 = (taxable_income - 300000) * 0.11;
-                                                                                            let tax = first_300 + next_300;
-                                    
-                                                                                            let netsalary = Employee_Gross - tax;
-                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
-                                                                                            })    
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                        } else if(Employee_Gross >= 1000000 && Employee_Gross < 2250000) {
-                                                                                            let relief_allowance = 0.2;
-                                                                                                                                                    
-                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
-                                        
-                                                                                            let taxable_income = Employee_Gross - statutory_relief
-                                    
-                                                                                            let first_300 = 300000 * 0.07;
-                                                                                            let next_300 = 300000 * 0.11;
-                                                                                            let next_500 = 500000 * 0.15;
-                                                                                            let next_500_2 = (taxable_income - 1100000) * 0.19;
-                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2;
-                                    
-                                                                                            let netsalary = Employee_Gross - tax;
-                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
-                                                                                            })    
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                        } else if(Employee_Gross >= 2250000 && Employee_Gross < 4250000) {
-                                                                                            let relief_allowance = 0.2;
-                                                                                                                                                    
-                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
-                                        
-                                                                                            let taxable_income = Employee_Gross - statutory_relief
-                                    
-                                                                                            let first_300 = 300000 * 0.07;
-                                                                                            let next_300 = 300000 * 0.11;
-                                                                                            let next_500 = 500000 * 0.15;
-                                                                                            let next_500_2 = 500000 * 0.19;
-                                                                                            let next_1600 = (taxable_income - 1600000) * 0.21;
-                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
-                                    
-                                                                                            let netsalary = Employee_Gross - tax;
-                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
-                                                                                            })    
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
-                                    
-                                                                                        } else if(Employee_Gross >= 4250000) {
-                                                                                            let relief_allowance = 0.2;
-                                                                                                                                                    
-                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
-                                        
-                                                                                            let taxable_income = Employee_Gross - statutory_relief
-                                    
-                                                                                            let first_300 = 300000 * 0.07;
-                                                                                            let next_300 = 300000 * 0.11;
-                                                                                            let next_500 = 500000 * 0.15;
-                                                                                            let next_500_2 = 500000 * 0.19;
-                                                                                            let next_1600 = 1600000 * 0.21;
-                                                                                            let next_3200 = (taxable_income - 3200000) * 0.24;
-                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
-                                    
-                                                                                            let netsalary = Employee_Gross - tax;
-                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
-                                    
-                                                                                            const newLeave = new Leave({
-                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
-                                                                                                email: Email, leave_type: req.body.leave_type, 
-                                                                                                approval_date: req.body.approval_date, 
-                                                                                                leave_duration: {
-                                                                                                    start: req.body.duration.start,
-                                                                                                    end: req.body.duration.end
-                                                                                                }, days_on_leave: days_on_leave,
-                                                                                                leave_pay: netsalary_perleave_days,
-                                                                                            })    
-                                                                                            const leave = await newLeave.save();
-                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                                                                            let first_300 = taxable_income - 0;
+                                                                                                            let tax = first_300 * 0.07;
+                                                    
+                                                                                                            let netsalary = Employee_Gross - tax;
+                                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                            })    
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                        } else if(Employee_Gross >= 625000 && Employee_Gross < 1000000) {
+                                                                                                            let relief_allowance = 0.2;
+                                                                                                                                                                    
+                                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
+                                                        
+                                                                                                            let taxable_income = Employee_Gross - statutory_relief
+                                                    
+                                                                                                            let first_300 = 300000 * 0.07;
+                                                                                                            let next_300 = (taxable_income - 300000) * 0.11;
+                                                                                                            let tax = first_300 + next_300;
+                                                    
+                                                                                                            let netsalary = Employee_Gross - tax;
+                                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                            })    
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                        } else if(Employee_Gross >= 1000000 && Employee_Gross < 2250000) {
+                                                                                                            let relief_allowance = 0.2;
+                                                                                                                                                                    
+                                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
+                                                        
+                                                                                                            let taxable_income = Employee_Gross - statutory_relief
+                                                    
+                                                                                                            let first_300 = 300000 * 0.07;
+                                                                                                            let next_300 = 300000 * 0.11;
+                                                                                                            let next_500 = 500000 * 0.15;
+                                                                                                            let next_500_2 = (taxable_income - 1100000) * 0.19;
+                                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2;
+                                                    
+                                                                                                            let netsalary = Employee_Gross - tax;
+                                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                            })    
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                        } else if(Employee_Gross >= 2250000 && Employee_Gross < 4250000) {
+                                                                                                            let relief_allowance = 0.2;
+                                                                                                                                                                    
+                                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
+                                                        
+                                                                                                            let taxable_income = Employee_Gross - statutory_relief
+                                                    
+                                                                                                            let first_300 = 300000 * 0.07;
+                                                                                                            let next_300 = 300000 * 0.11;
+                                                                                                            let next_500 = 500000 * 0.15;
+                                                                                                            let next_500_2 = 500000 * 0.19;
+                                                                                                            let next_1600 = (taxable_income - 1600000) * 0.21;
+                                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600;
+                                                    
+                                                                                                            let netsalary = Employee_Gross - tax;
+                                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                            })    
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                    
+                                                                                                        } else if(Employee_Gross >= 4250000) {
+                                                                                                            let relief_allowance = 0.2;
+                                                                                                                                                                    
+                                                                                                            let statutory_relief = Employee_Gross * relief_allowance + 200000;
+                                                        
+                                                                                                            let taxable_income = Employee_Gross - statutory_relief
+                                                    
+                                                                                                            let first_300 = 300000 * 0.07;
+                                                                                                            let next_300 = 300000 * 0.11;
+                                                                                                            let next_500 = 500000 * 0.15;
+                                                                                                            let next_500_2 = 500000 * 0.19;
+                                                                                                            let next_1600 = 1600000 * 0.21;
+                                                                                                            let next_3200 = (taxable_income - 3200000) * 0.24;
+                                                                                                            let tax = first_300 + next_300 + next_500 + next_500_2 + next_1600 + next_3200;
+                                                    
+                                                                                                            let netsalary = Employee_Gross - tax;
+                                                                                                            let netsalary_perleave_days = parseFloat((((netsalary * number_of_days_worked).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                                                    
+                                                                                                            const newLeave = new Leave({
+                                                                                                                staff_ID: Staff_ID, first_name: First_Name, last_name: Last_Name,
+                                                                                                                email: Email, leave_type: req.body.leave_type, 
+                                                                                                                approval_date: req.body.approval_date, 
+                                                                                                                leave_duration: {
+                                                                                                                    start: req.body.duration.start,
+                                                                                                                    end: req.body.duration.end
+                                                                                                                }, days_on_leave: days_on_leave,
+                                                                                                                leave_pay: netsalary_perleave_days,
+                                                                                                            })    
+                                                                                                            const leave = await newLeave.save();
+                                                                                                            res.status(200).json({"Message": `Employee will be on leave for ${days_on_leave > 1 ? `${days_on_leave} days` : `${days_on_leave} day`}`, leave})
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        } else {
+                                                                                            res.status(400).json({"Message": "Leave cannot start on or before approval date"});
                                                                                         }
                                                                                     }
                                                                                 }
-                                                                            } else {
-                                                                                res.status(400).json({"Message": "Leave cannot start on or before approval date"})
-                                                                            }
+                                                                            })
                                                                         }
                                                                     }
                                                                 })

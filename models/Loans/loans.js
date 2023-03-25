@@ -31,6 +31,9 @@ const LoanSchema = new mongoose.Schema({
             String
         ],
     },
+    amount_of_days: {
+        type: Number
+    },
     loan_duration : {
         from: {
             type: String,
