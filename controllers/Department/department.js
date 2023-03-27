@@ -20,7 +20,7 @@ const getAllDepartments = async (req, res, next) => {
     }
 }
 
-const getSingledepartment = async (req, res, next) => {
+const getSingledepartmentUnit = async (req, res, next) => {
     const { dept_name } = req.query;
     try {
         Department.find({}, (err, dept) => {
@@ -52,6 +52,34 @@ const getSingledepartment = async (req, res, next) => {
         })
         
         
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getSingledepartment = async (req, res, next) => {
+    const { dept_name } = req.query;
+    try {
+        Department.findOne({dept_name: dept_name}, (error, departments) => {
+            if(error) throw error;
+            else {
+                if(departments) {
+                    const Employee_Ids = departments.employee_ids
+                    Enrollment.find({_id:Employee_Ids}, {qrcode: 0} ,(error, employees) => {
+                        if(error) throw error;
+                        else {
+                            if(employees.length > 0) {
+                                res.status(200).json({departments, employees});
+                            } else {
+                                res.status(400).json({departments, employees});
+                            }
+                        }
+                    })
+                } else {
+                    res.status(400).json(departments);
+                }
+            }
+        })
     } catch (error) {
         next(error);
     }
@@ -606,6 +634,7 @@ const transfer = async (req, res, next) => {
 
 module.exports = {
     getAllDepartments,
+    getSingledepartmentUnit,
     getSingledepartment,
     createDepartment,
     updateDepartment,

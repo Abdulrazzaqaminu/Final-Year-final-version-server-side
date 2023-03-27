@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
     getAllDepartments,
+    getSingledepartmentUnit,
     getSingledepartment,
     createDepartment,
     updateDepartment,
@@ -10,8 +11,10 @@ const {
 
 // get all departments
 router.get("/", getAllDepartments);
-// get single departments
-router.get("/filter", getSingledepartment);
+// get single department with units
+router.get("/filter", getSingledepartmentUnit);
+// get single department
+router.get("/filter_department" , getSingledepartment);
 // create department
 router.post("/", createDepartment);
 // update department

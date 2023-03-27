@@ -52,6 +52,9 @@ const salary_calculator = async (req, res, next) =>{
                     let Employee_Grade = rs[0].grade;
                     let Employee_Type = rs[0].employee_type;
                     let email = rs[0].email;
+
+                    let Employee_Gross = parseFloat((((rs[0].gross_salary).toFixed(2)).toLocaleString()).replace(/,/g,''));
+                    let Employee_Gross_formatted = (Employee_Gross).toLocaleString();
                     Payroll.find({employee_id: Employee_ID}, (error, employee) =>{
                         if(error) throw error;
                         else{
@@ -138,7 +141,8 @@ const salary_calculator = async (req, res, next) =>{
                                                                         "Days_Worked": total_worked_days,
                                                                         "Hours_Worked": total_hours_worked,
                                                                         "Extra_Hours": total_overtime_hours,
-                                                                        "Leave_pay": `NGN ${leave_pay_formatted}`,
+                                                                        "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
+                                                                        "Leave_Pay": `NGN ${leave_pay_formatted}`,
                                                                         "Net_Salary": `NGN ${Net_Salary_Formatted}`
                                                                     });
                                                                 } else {
@@ -152,6 +156,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                         "Employee_Type": Employee_Type,
                                                                         "Days_Worked": total_worked_days,
                                                                         "Hours_Worked": total_hours_worked,
+                                                                        "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                         "Net_Salary": `NGN ${Net_Salary_Formatted}`
                                                                     });
                                                                 }
@@ -170,7 +175,8 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Days_Worked": 0,
                                                                 "Hours_Worked": 0,
                                                                 "Extra_Hours": 0,
-                                                                "Leave_pay": "NGN 0.00",
+                                                                "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
+                                                                "Leave_Pay": "NGN 0.00",
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
                                                             res.status(400).json({"Message": "Employee is yet to start work", employee});
@@ -185,6 +191,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Employee_Type": Employee_Type,
                                                                 "Days_Worked": 0,
                                                                 "Hours_Worked": 0,
+                                                                "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
                                                             res.status(400).json({"Message": "Employee is yet to start work", employee});
@@ -253,7 +260,8 @@ const salary_calculator = async (req, res, next) =>{
                                                                         "Days_Worked": total_worked_days,
                                                                         "Hours_Worked": total_hours_worked,
                                                                         "Extra_Hours": total_overtime_hours,
-                                                                        "Leave_pay": "NGN 0.00",
+                                                                        "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
+                                                                        "Leave_Pay": "NGN 0.00",
                                                                         "Net_Salary": `NGN ${Net_Salary_Formatted}`
                                                                     });
                                                                 } else {
@@ -267,6 +275,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                         "Employee_Type": Employee_Type,
                                                                         "Days_Worked": total_worked_days,
                                                                         "Hours_Worked": total_hours_worked,
+                                                                        "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                         "Net_Salary": `NGN ${Net_Salary_Formatted}`
                                                                     });
                                                                 }
@@ -285,7 +294,8 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Days_Worked": 0,
                                                                 "Hours_Worked": 0,
                                                                 "Extra_Hours": 0,
-                                                                "Leave_pay": "NGN 0.00",
+                                                                "Leave_Pay": "NGN 0.00",
+                                                                "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
                                                             res.status(400).json({"Message": "Employee is yet to start work", employee});
@@ -299,6 +309,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Grade" : Employee_Grade,
                                                                 "Employee_Type": Employee_Type,
                                                                 "Days_Worked": 0,
+                                                                "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                 "Hours_Worked": 0,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
