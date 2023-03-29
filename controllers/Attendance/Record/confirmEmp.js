@@ -69,7 +69,7 @@ const findEmployee = async (req, res, next) => {
                                                             else {
                                                                 if(emp_active) {
                                                                     Leave.findOneAndUpdate({email: Employee_Email, status: "On Leave"}, 
-                                                                    {status: "Active"},
+                                                                    {status: "Resumed"},
                                                                     (error, updated_leave) => {
                                                                         if(error) throw error;
                                                                         else {

@@ -317,7 +317,105 @@ const getLeaves = async (req, res, next) => {
     }
 }
 
+const filterLeave = async (req, res, next) => {
+    try {
+        Leave.find({}, (error, rs) => {
+            if(error) throw error;
+            else {
+                if(rs.length > 0) {
+                    Leave.aggregate([
+                        {
+                            $match: {
+                                status: "Resumed"
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: "$status",
+                                total_resumed: {
+                                    $sum: 1
+                                }
+                            }
+                        }
+                    ], (error, resumed) => {
+                        if(error) throw error;
+                        else {
+                            Leave.aggregate([
+                                {
+                                    $match: {
+                                        status: "On Leave"
+                                    }
+                                },
+                                {
+                                    $group: {
+                                        _id: "$status",
+                                        total_on_leave: {
+                                            $sum: 1
+                                        }
+                                    }
+                                }
+                            ], (error, on_leave) => {
+                                if(error) throw error;
+                                else {
+                                    Leave.aggregate([
+                                        {
+                                            $match: {
+                                                status: "Approved"
+                                            }
+                                        },
+                                        {
+                                            $group: {
+                                                _id: "$status",
+                                                total_approved: {
+                                                    $sum: 1
+                                                }
+                                            }
+                                        }
+                                    ], (error, approved) => {
+                                        if(error) throw error;
+                                        else {
+                                            res.status(200).json({
+                                                "Approved": approved[0]?.total_approved || 0, 
+                                                "On_Leave": on_leave[0]?.total_on_leave || 0, 
+                                                "Resumed": resumed[0]?.total_resumed || 0, 
+                                            })   
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    res.status(400).json({"Message": "No leaves recorded"})
+                }
+            }
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+const filterLeaveTable = async (req, res, next) => {
+    try {
+        const { leave_status } = req.query;
+        Leave.find({status: leave_status}, (error, leave) => {
+            if(error) throw error;
+            else {
+                if(leave.length > 0) {
+                    res.status(200).json(leave);
+                } else {
+                    res.status(400).json(leave);
+                }
+            }
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     requestLeave,
-    getLeaves
+    getLeaves,
+    filterLeave,
+    filterLeaveTable
 };
