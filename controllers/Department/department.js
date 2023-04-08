@@ -1,6 +1,10 @@
 const Department = require("../../models/Department/department");
 const Unit = require("../../models/Department/unit");
 const Hod = require("../../models/Department/hod");
+const WorkingHours = require("../../models/Attendance/working_hours");
+const DailyPay = require("../../models/Daily_Pay/daily_pay");
+const Leave = require("../../models/Leave/leave");
+const Loans = require("../../models/Loans/loans");
 const Enrollment = require("../../models/Enrollment/enrollment");
 
 const getAllDepartments = async (req, res, next) => {
@@ -383,6 +387,7 @@ const transfer = async (req, res, next) => {
                 if(emp) {
                     const Employee_ID = emp._id;
                     const Employee_Email = emp.email;
+                    const STAFF_ID = emp.staff_ID;
                     Hod.findOne({hod_email: Employee_Email}, (error, hod) => {
                         if(error) throw error
                         else {
@@ -454,11 +459,99 @@ const transfer = async (req, res, next) => {
                                                                                                                                     department: DEPARTMENT_NAME,
                                                                                                                                     unit: UNIT_NAME
                                                                                                                                 },
-                                                                                                                                (error, employee) => {
+                                                                                                                                {new: true},
+                                                                                                                                (error, employeeTransfered) => {
                                                                                                                                 if(error) throw error;
                                                                                                                                 else {
-                                                                                                                                    if(employee) {
-                                                                                                                                        res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                    if(employeeTransfered) {
+                                                                                                                                        Leave.aggregate([
+                                                                                                                                            {
+                                                                                                                                                $match: {
+                                                                                                                                                email: Employee_Email
+                                                                                                                                                }
+                                                                                                                                            },
+                                                                                                                                            {
+                                                                                                                                                $group: {
+                                                                                                                                                    _id: "$email",
+                                                                                                                                                    total_leave_pay: {
+                                                                                                                                                        $sum: "$leave_pay"
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        ], (error, leave) => {
+                                                                                                                                            if(error) throw error;
+                                                                                                                                            else {
+                                                                                                                                                let leave_pay = parseFloat((((leave[0]?.total_leave_pay)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                let leave_pay_formatted = (leave_pay)?.toLocaleString();
+                                                                                                                                                WorkingHours.aggregate([
+                                                                                                                                                    {
+                                                                                                                                                        $match: {
+                                                                                                                                                            email: Employee_Email
+                                                                                                                                                        }
+                                                                                                                                                    },
+                                                                                                                                                    {
+                                                                                                                                                        $group: {
+                                                                                                                                                            _id: "$email",
+                                                                                                                                                            total_hours: {
+                                                                                                                                                                $sum: "$hours.worked_hours"
+                                                                                                                                                            },
+                                                                                                                                                            total_extra_hours: {
+                                                                                                                                                                $sum: "$hours.extra_hours"
+                                                                                                                                                            },
+                                                                                                                                                            days_worked: {
+                                                                                                                                                                $sum: 1
+                                                                                                                                                            }  
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                ], (error, employee) => {
+                                                                                                                                                    if(error) throw error;
+                                                                                                                                                    else {
+                                                                                                                                                        let total_hours_worked = employee[0]?.total_hours;
+                                                                                                                                                        let total_worked_days = employee[0]?.days_worked;
+                                                                                                                                                        let total_overtime_hours = employee[0]?.total_extra_hours;
+                                                                                                                                                        DailyPay.aggregate([
+                                                                                                                                                            {
+                                                                                                                                                                $match: {
+                                                                                                                                                                    email: Employee_Email
+                                                                                                                                                                }
+                                                                                                                                                            },
+                                                                                                                                                            {
+                                                                                                                                                                $group: {
+                                                                                                                                                                    _id: "$email",
+                                                                                                                                                                    total_netsalary: {
+                                                                                                                                                                        $sum: "$net_salary.netsalary"
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            }
+                                                                                                                                                        ], (error, rs) => {
+                                                                                                                                                            if(error) throw error;
+                                                                                                                                                            else {
+                                                                                                                                                                let Net_Salary = parseFloat((((rs[0]?.total_netsalary)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                let Net_Salary_Formatted = (Net_Salary)?.toLocaleString();
+                                                                                                                                                                Loans.findOne({email: Employee_Email}, (error, loan) => {
+                                                                                                                                                                    if(error) throw error;
+                                                                                                                                                                    else {
+                                                                                                                                                                        let loanpay = parseFloat((((loan?.loan_amount)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                        let loanpay_formatted = (loanpay)?.toLocaleString();
+
+                                                                                                                                                                        res.status(200).json({
+                                                                                                                                                                            "Message": "Successfully transfered employee",
+                                                                                                                                                                            "employee_details": employeeTransfered, 
+                                                                                                                                                                            "employee_leave_pay": leave_pay_formatted || 0,
+                                                                                                                                                                            "hours_worked": total_hours_worked || 0,
+                                                                                                                                                                            "days_worked": total_worked_days || 0,
+                                                                                                                                                                            "loan": loanpay_formatted || 0,
+                                                                                                                                                                            "overtime": total_overtime_hours || 0,
+                                                                                                                                                                            "net": Net_Salary_Formatted || 0
+                                                                                                                                                                        })
+                                                                                                                                                                    }
+                                                                                                                                                                })
+                                                                                                                                                            }
+                                                                                                                                                        })
+                                                                                                                                                    }
+                                                                                                                                                })
+                                                                                                                                            }
+                                                                                                                                        })
                                                                                                                                     }
                                                                                                                                 }
                                                                                                                             })
@@ -510,11 +603,99 @@ const transfer = async (req, res, next) => {
                                                                                                                                                                 department: DEPARTMENT_NAME,
                                                                                                                                                                 unit: UNIT_NAME
                                                                                                                                                             },
-                                                                                                                                                            (error, employee) => {
+                                                                                                                                                            {new: true},
+                                                                                                                                                            (error, employeeTransfered) => {
                                                                                                                                                             if(error) throw error;
                                                                                                                                                             else {
-                                                                                                                                                                if(employee) {
-                                                                                                                                                                    res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                                                if(employeeTransfered) {
+                                                                                                                                                                    Leave.aggregate([
+                                                                                                                                                                        {
+                                                                                                                                                                            $match: {
+                                                                                                                                                                            email: Employee_Email
+                                                                                                                                                                            }
+                                                                                                                                                                        },
+                                                                                                                                                                        {
+                                                                                                                                                                            $group: {
+                                                                                                                                                                                _id: "$email",
+                                                                                                                                                                                total_leave_pay: {
+                                                                                                                                                                                    $sum: "$leave_pay"
+                                                                                                                                                                                }
+                                                                                                                                                                            }
+                                                                                                                                                                        }
+                                                                                                                                                                    ], (error, leave) => {
+                                                                                                                                                                        if(error) throw error;
+                                                                                                                                                                        else {
+                                                                                                                                                                            let leave_pay = parseFloat((((leave[0]?.total_leave_pay)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                            let leave_pay_formatted = (leave_pay)?.toLocaleString();
+                                                                                                                                                                            WorkingHours.aggregate([
+                                                                                                                                                                                {
+                                                                                                                                                                                    $match: {
+                                                                                                                                                                                        email: Employee_Email
+                                                                                                                                                                                    }
+                                                                                                                                                                                },
+                                                                                                                                                                                {
+                                                                                                                                                                                    $group: {
+                                                                                                                                                                                        _id: "$email",
+                                                                                                                                                                                        total_hours: {
+                                                                                                                                                                                            $sum: "$hours.worked_hours"
+                                                                                                                                                                                        },
+                                                                                                                                                                                        total_extra_hours: {
+                                                                                                                                                                                            $sum: "$hours.extra_hours"
+                                                                                                                                                                                        },
+                                                                                                                                                                                        days_worked: {
+                                                                                                                                                                                            $sum: 1
+                                                                                                                                                                                        }  
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            ], (error, employee) => {
+                                                                                                                                                                                if(error) throw error;
+                                                                                                                                                                                else {
+                                                                                                                                                                                    let total_hours_worked = employee[0]?.total_hours;
+                                                                                                                                                                                    let total_worked_days = employee[0]?.days_worked;
+                                                                                                                                                                                    let total_overtime_hours = employee[0]?.total_extra_hours;
+                                                                                                                                                                                    DailyPay.aggregate([
+                                                                                                                                                                                        {
+                                                                                                                                                                                            $match: {
+                                                                                                                                                                                                email: Employee_Email
+                                                                                                                                                                                            }
+                                                                                                                                                                                        },
+                                                                                                                                                                                        {
+                                                                                                                                                                                            $group: {
+                                                                                                                                                                                                _id: "$email",
+                                                                                                                                                                                                total_netsalary: {
+                                                                                                                                                                                                    $sum: "$net_salary.netsalary"
+                                                                                                                                                                                                }
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    ], (error, rs) => {
+                                                                                                                                                                                        if(error) throw error;
+                                                                                                                                                                                        else {
+                                                                                                                                                                                            let Net_Salary = parseFloat((((rs[0]?.total_netsalary)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                                            let Net_Salary_Formatted = (Net_Salary)?.toLocaleString();
+                                                                                                                                                                                            Loans.findOne({email: Employee_Email}, (error, loan) => {
+                                                                                                                                                                                                if(error) throw error;
+                                                                                                                                                                                                else {
+                                                                                                                                                                                                    let loanpay = parseFloat((((loan?.loan_amount)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                                                    let loanpay_formatted = (loanpay)?.toLocaleString();
+                            
+                                                                                                                                                                                                    res.status(200).json({
+                                                                                                                                                                                                        "Message": "Successfully transfered employee",
+                                                                                                                                                                                                        "employee_details": employeeTransfered, 
+                                                                                                                                                                                                        "employee_leave_pay": leave_pay_formatted || 0,
+                                                                                                                                                                                                        "hours_worked": total_hours_worked || 0,
+                                                                                                                                                                                                        "days_worked": total_worked_days || 0,
+                                                                                                                                                                                                        "loan": loanpay_formatted || 0,
+                                                                                                                                                                                                        "overtime": total_overtime_hours || 0,
+                                                                                                                                                                                                        "net": Net_Salary_Formatted || 0
+                                                                                                                                                                                                    })
+                                                                                                                                                                                                }
+                                                                                                                                                                                            })
+                                                                                                                                                                                        }
+                                                                                                                                                                                    })
+                                                                                                                                                                                }
+                                                                                                                                                                            })
+                                                                                                                                                                        }
+                                                                                                                                                                    })
                                                                                                                                                                 }
                                                                                                                                                             }
                                                                                                                                                         })
@@ -576,11 +757,99 @@ const transfer = async (req, res, next) => {
                                                                                                                                                                 department: DEPARTMENT_NAME,
                                                                                                                                                                 unit: UNIT_NAME
                                                                                                                                                             },
-                                                                                                                                                            (error, employee) => {
+                                                                                                                                                            {new: true},
+                                                                                                                                                            (error, employeeTransfered) => {
                                                                                                                                                             if(error) throw error;
                                                                                                                                                             else {
-                                                                                                                                                                if(employee) {
-                                                                                                                                                                    res.status(200).json({"Message": "Successfully transfered employee", employee})
+                                                                                                                                                                if(employeeTransfered) {
+                                                                                                                                                                    Leave.aggregate([
+                                                                                                                                                                        {
+                                                                                                                                                                            $match: {
+                                                                                                                                                                            email: Employee_Email
+                                                                                                                                                                            }
+                                                                                                                                                                        },
+                                                                                                                                                                        {
+                                                                                                                                                                            $group: {
+                                                                                                                                                                                _id: "$email",
+                                                                                                                                                                                total_leave_pay: {
+                                                                                                                                                                                    $sum: "$leave_pay"
+                                                                                                                                                                                }
+                                                                                                                                                                            }
+                                                                                                                                                                        }
+                                                                                                                                                                    ], (error, leave) => {
+                                                                                                                                                                        if(error) throw error;
+                                                                                                                                                                        else {
+                                                                                                                                                                            let leave_pay = parseFloat((((leave[0]?.total_leave_pay)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                            let leave_pay_formatted = (leave_pay)?.toLocaleString();
+                                                                                                                                                                            WorkingHours.aggregate([
+                                                                                                                                                                                {
+                                                                                                                                                                                    $match: {
+                                                                                                                                                                                        email: Employee_Email
+                                                                                                                                                                                    }
+                                                                                                                                                                                },
+                                                                                                                                                                                {
+                                                                                                                                                                                    $group: {
+                                                                                                                                                                                        _id: "$email",
+                                                                                                                                                                                        total_hours: {
+                                                                                                                                                                                            $sum: "$hours.worked_hours"
+                                                                                                                                                                                        },
+                                                                                                                                                                                        total_extra_hours: {
+                                                                                                                                                                                            $sum: "$hours.extra_hours"
+                                                                                                                                                                                        },
+                                                                                                                                                                                        days_worked: {
+                                                                                                                                                                                            $sum: 1
+                                                                                                                                                                                        }  
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            ], (error, employee) => {
+                                                                                                                                                                                if(error) throw error;
+                                                                                                                                                                                else {
+                                                                                                                                                                                    let total_hours_worked = employee[0]?.total_hours;
+                                                                                                                                                                                    let total_worked_days = employee[0]?.days_worked;
+                                                                                                                                                                                    let total_overtime_hours = employee[0]?.total_extra_hours;
+                                                                                                                                                                                    DailyPay.aggregate([
+                                                                                                                                                                                        {
+                                                                                                                                                                                            $match: {
+                                                                                                                                                                                                email: Employee_Email
+                                                                                                                                                                                            }
+                                                                                                                                                                                        },
+                                                                                                                                                                                        {
+                                                                                                                                                                                            $group: {
+                                                                                                                                                                                                _id: "$email",
+                                                                                                                                                                                                total_netsalary: {
+                                                                                                                                                                                                    $sum: "$net_salary.netsalary"
+                                                                                                                                                                                                }
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    ], (error, rs) => {
+                                                                                                                                                                                        if(error) throw error;
+                                                                                                                                                                                        else {
+                                                                                                                                                                                            let Net_Salary = parseFloat((((rs[0]?.total_netsalary)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                                            let Net_Salary_Formatted = (Net_Salary)?.toLocaleString();
+                                                                                                                                                                                            Loans.findOne({email: Employee_Email}, (error, loan) => {
+                                                                                                                                                                                                if(error) throw error;
+                                                                                                                                                                                                else {
+                                                                                                                                                                                                    let loanpay = parseFloat((((loan?.loan_amount)?.toFixed(2))?.toLocaleString())?.replace(/,/g,''));
+                                                                                                                                                                                                    let loanpay_formatted = (loanpay)?.toLocaleString();
+                            
+                                                                                                                                                                                                    res.status(200).json({
+                                                                                                                                                                                                        "Message": "Successfully transfered employee",
+                                                                                                                                                                                                        "employee_details": employeeTransfered, 
+                                                                                                                                                                                                        "employee_leave_pay": leave_pay_formatted || 0,
+                                                                                                                                                                                                        "hours_worked": total_hours_worked || 0,
+                                                                                                                                                                                                        "days_worked": total_worked_days || 0,
+                                                                                                                                                                                                        "loan": loanpay_formatted || 0,
+                                                                                                                                                                                                        "overtime": total_overtime_hours || 0,
+                                                                                                                                                                                                        "net": Net_Salary_Formatted || 0
+                                                                                                                                                                                                    })
+                                                                                                                                                                                                }
+                                                                                                                                                                                            })
+                                                                                                                                                                                        }
+                                                                                                                                                                                    })
+                                                                                                                                                                                }
+                                                                                                                                                                            })
+                                                                                                                                                                        }
+                                                                                                                                                                    })
                                                                                                                                                                 }
                                                                                                                                                             }
                                                                                                                                                         })
