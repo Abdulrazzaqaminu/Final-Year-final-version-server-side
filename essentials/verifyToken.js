@@ -1,14 +1,15 @@
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const createError = require("../essentials/error");
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies.access_token;
+    const JWT_SECRET = process.env.JWT_SECRET;
     if(!token) {
-        return next(createError(401, "You are not authenticated"));
+        return res.status(401).json({"Message": "Unauthorized entry"});
     } else {
-        jwt.verify(token, "secretekey", (error, admin) => {
+        jwt.verify(token, JWT_SECRET, (error, admin) => {
             if(error) {
-                return next(createError(403, "Invalid token"));
+                return res.status(403).json({"Message": "Invalid token"});
             } else {
                 req.admin = admin; // creating a property = req.admin
                 next();
@@ -16,14 +17,5 @@ const verifyToken = (req, res, next) => {
         })
     }
 }
-// const verifyAdmin = (req, res, next) => {
-//     verifyToken(req, res, next, () => {
-//         if(req.admin.isAdmin) {
-//             next();
-//         } else {
-//             res.status(403).json({"Message": "You are not an admin"});
-//         }
-//     })
-// }
 
 module.exports = verifyToken;

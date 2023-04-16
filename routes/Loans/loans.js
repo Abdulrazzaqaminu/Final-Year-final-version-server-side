@@ -5,14 +5,15 @@ const {
     getLoans,
     getSingleEmployeeLoan,
     clearLoan } = require("../../controllers/Loans/loans");
+const verifyToken = require("../../essentials/verifyToken");
 
 // loan payment
-router.post("/", loanPayment);
+router.post("/", verifyToken, loanPayment);
 // get list of all loans
-router.get("/", getLoans);
+router.get("/", verifyToken, getLoans);
 // get each employees loan history
-router.get("/:employee_id", getSingleEmployeeLoan);
+router.get("/:employee_id", verifyToken, getSingleEmployeeLoan);
 // clear employee loan
-router.put("/:employee_id", clearLoan);
+router.put("/:employee_id", verifyToken, clearLoan);
 
 module.exports = router;

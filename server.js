@@ -19,7 +19,7 @@ const loansRoute = require("./routes/Loans/loans");
 const leaveRoute = require("./routes/Leave/leave");
 const payrollRoute = require("./routes/Payroll/payroll");
 const employeeSalaryRoute = require("./routes/Payroll/Employee_Salary/employee_salary");
-const adminLoginRoute = require("./routes/Login/login");
+const adminLogRoute = require("./routes/Auth/logs");
 
 // Environmental variables
 const PORT = process.env.PORT;
@@ -30,40 +30,32 @@ const connection = async () => {
     try {
         mongoose.set('strictQuery', false);
         await mongoose.connect(DB_URI, {useNewUrlParser: true});
-        console.log("Connected to database");
+        // console.log("Connected to database");
     } catch (error) {
         throw error;
     }
 }
 const DB = mongoose.connection;
 DB.on("disconnected", (error) => {
-    console.log("MongoDB Disconnected!");
+    // console.log("MongoDB Disconnected!");
     throw error;
 });
-DB.on("connected", () => {
-    console.log("MongoDB Connected!");
-});
+// DB.on("connected", () => {
+//     console.log("MongoDB Connected!");
+// });
 
 var corsOptions = {
     origin: "http://localhost:3000",
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials: true
 }
 
 // middlewares
-app.use(cors(corsOptions));
-app.use(express.urlencoded({extended: true}));
-app.use(cookieParser());
 app.use(express.json());
-app.use((error, req, res, next) => {
-    const errorStatus = error.status || 500;
-    const errorrMessage = error.message || "Something went wrong";
-    return res.status(errorStatus).json({
-        success: false,
-        status: errorStatus,
-        message: errorrMessage,
-        stack: error.stack
-    });
-});
+app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(express.urlencoded({extended: true}));
+
 // routes
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/department", departmentRoute);
@@ -77,9 +69,9 @@ app.use("/api/loans", loansRoute);
 app.use("/api/leave", leaveRoute);
 app.use("/api/payroll", payrollRoute);
 app.use("/api/payroll", employeeSalaryRoute);
-app.use("/api/login", adminLoginRoute);
+app.use("/api/log", adminLogRoute);
 
 app.listen(PORT, () => {
     connection();
-    console.log(`Server running at port ${PORT}`);
+    // console.log(`Server running at port ${PORT}`);
 });
