@@ -26,8 +26,8 @@ const EnrollmentSchema = new mongoose.Schema({
     phone_number: {
         type: String,
         required: true,
-        min: 11,
-        max: 11,
+        minLength: 11,
+        maxLength: 11,
     },
     department: {
         type: String,

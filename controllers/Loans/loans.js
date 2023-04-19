@@ -165,7 +165,7 @@ const getLoans = async (req, res, next) => {
                 if(loan.length > 0) {
                     res.status(200).json(loan);
                 } else {
-                    res.status(404).json({"Message": "No loans have been made", loan});
+                    res.status(404).json({loan});
                 }
             }
         }).sort({createdAt: -1})

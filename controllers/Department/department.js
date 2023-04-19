@@ -15,7 +15,7 @@ const getAllDepartments = async (req, res, next) => {
                 if(dept.length > 0) {
                     res.status(200).json(dept);
                 } else {
-                    res.status(404).json({"Message": "There are no departments in the system", dept});
+                    res.status(404).json({dept});
                 }
             }
         }).sort({createdAt: -1})

@@ -308,7 +308,7 @@ const getLeaves = async (req, res, next) => {
                 if(leave.length > 0) {
                     res.status(200).json(leave);
                 } else {
-                    res.status(404).json({"Message": "No leave requests", leave})
+                    res.status(404).json({leave})
                 }
             }
         }).sort({createdAt: -1})
