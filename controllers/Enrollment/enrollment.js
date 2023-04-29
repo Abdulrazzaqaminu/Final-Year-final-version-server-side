@@ -49,7 +49,7 @@ const enrollEmployee = async (req, res, next) => {
         res.status(400).json({"Message": "Fill in the appropriate fields", emptyFields})
     } else {
         const double_space = /\s\s/
-        const correct_email = /^[\w.+\-]+@gmail\.com$/
+        const correct_email = /^[a-zA-Z0-9]+(?:[._][a-zA-Z0-9]+)+@gmail\.com$/
         const correct_language = /^[a-zA-Z0-9]+(\s+[a-zA-Z0-9]+)*$/
     
         if(correct_email.test(req.body.email)) {
@@ -222,7 +222,7 @@ const enrollEmployee = async (req, res, next) => {
                 res.status(400).json({"Message": "Whitespace at the begining or end of street field"})
             }
         } else {
-            res.status(400).json({"Message": "Email should end with @gmail.com"})
+            res.status(400).json({"Message": "Invalid email format"})
         }
 
 

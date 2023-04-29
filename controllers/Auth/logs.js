@@ -45,7 +45,7 @@ const login = async (req, res, next) => {
                 next(error);
             }
         } else {
-            res.status(400).json({"Message": "Email should end with @gmail.com"})
+            res.status(400).json({"Message": "Invalid email format"})
         }
     }
 }

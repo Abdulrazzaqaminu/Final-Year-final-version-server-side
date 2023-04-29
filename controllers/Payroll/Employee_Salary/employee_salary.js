@@ -179,7 +179,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Leave_Pay": "NGN 0.00",
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
-                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                            res.status(400).json({employee});
                                                         } else {
                                                             const employee = {
                                                                 "Staff_ID" : Staff_ID,
@@ -194,7 +194,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
-                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                            res.status(400).json({employee});
                                                         }
                                                     }
                                                 }
@@ -298,7 +298,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Employee_Gross": `NGN ${Employee_Gross_formatted}`,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
-                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                            res.status(400).json({employee});
                                                         } else {
                                                             const employee = {
                                                                 "Staff_ID" : Staff_ID,
@@ -313,7 +313,7 @@ const salary_calculator = async (req, res, next) =>{
                                                                 "Hours_Worked": 0,
                                                                 "Net_Salary": "NGN 0.00"
                                                             }
-                                                            res.status(400).json({"Message": "Employee is yet to start work", employee});
+                                                            res.status(400).json({employee});
                                                         }
                                                     }
                                                 }

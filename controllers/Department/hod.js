@@ -4,20 +4,20 @@ const Hod = require("../../models/Department/hod");
 
 const assign_hod = async (req, res, next) => {
     const emptyFields = [];
-    if(!req.body.dept_HOD_email) {
-        emptyFields.push("hod_email");
+    if(!req.body.dept_HOD_id) {
+        emptyFields.push("hod_id");
     } 
     if(emptyFields.length > 0) {
         res.status(400).json({"Message": "Fill in the appropriate field", emptyFields})
     } else {
         const double_space = /\s\s/
-        const correct_language = /^[\w.+\-]+@gmail\.com$/
-        if(double_space.test(req.body.dept_HOD_email)) {
+        const correct_language = /^[0-9\b]+$/
+        if(double_space.test(req.body.dept_HOD_id)) {
             res.status(400).json({"Message": "Invalid email"})
-        } else if(correct_language.test(req.body.dept_HOD_email)){
+        } else if(correct_language.test(req.body.dept_HOD_id)){
             const Department_ID = req.params.dept_id;
             try {
-                Enrollment.findOne({email: req.body.dept_HOD_email, status: "Active"}, (error, rs) => {
+                Enrollment.findOne({staff_ID: req.body.dept_HOD_id, status: "Active"}, (error, rs) => {
                     if(error) throw error;
                     else {
                         if(rs) {
