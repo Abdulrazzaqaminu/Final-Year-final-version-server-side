@@ -49,7 +49,7 @@ const enrollEmployee = async (req, res, next) => {
         res.status(400).json({"Message": "Fill in the appropriate fields", emptyFields})
     } else {
         const double_space = /\s\s/
-        const correct_email = /^[a-zA-Z0-9]+(?:[._][a-zA-Z0-9]+)+@gmail\.com$/
+        const correct_email = /^[a-zA-Z0-9]+(?:[_][a-zA-Z0-9]+)+@gmail\.com$/
         const correct_language = /^[a-zA-Z0-9]+(\s+[a-zA-Z0-9]+)*$/
     
         if(correct_email.test(req.body.email)) {
@@ -449,7 +449,7 @@ const edit_employee = async (req, res, next) => {
                                                                         Leave.aggregate([
                                                                             {
                                                                                 $match: {
-                                                                                email: Employee_Email
+                                                                                    email: Employee_Email
                                                                                 }
                                                                             },
                                                                             {

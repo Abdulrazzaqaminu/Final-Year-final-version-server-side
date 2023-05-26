@@ -19,6 +19,9 @@ const DepartmentSchema = new mongoose.Schema({
             type: String,
             default: "N/A",
             lowercase: true
+        },
+        hod_assign_date: {
+            type: String
         }
     },
     dept_name: {

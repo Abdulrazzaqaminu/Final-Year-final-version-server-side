@@ -27,12 +27,30 @@ const login = async (req, res, next) => {
                             const Is_Password_Correct = await bcrypt.compare(req.body.password, Admin_Password);
                             if(Is_Password_Correct) {
                                 const token = jwt.sign({id: Admin_ID}, JWT_SECRET);
-                                const { isAdmin, ...otherDetails } = admin._doc;
+                                const { isAdmin, _id, ...otherDetails } = admin._doc;
+                                const today = new Date();
+                                let h = today.getHours();
+                                let m = today.getMinutes();
+                                let s = today.getSeconds();
+                                var ampm = h >= 12 ? 'PM' : 'AM';
+                                h = h % 12;
+                                h = h ? h : 12; // the hour '0' should be '12'
+                                m = m < 10 ? '0'+m : m;
+                                h = h < 10 ? '0'+h : h;
+                                s = s < 10 ? '0'+s : s;
+                                let to_day = new Date();
+                                let options = {
+                                    weekday: "long", 
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                }
+                                let day = to_day.toLocaleDateString("en-us", options);
                                 res.cookie("access_token", token, {
                                     httpOnly: true,
                                     sameSite: 'none', 
                                     secure: true
-                                }).status(200).json({...otherDetails});
+                                }).status(200).json({...otherDetails, "loggedIn": `${day} ${h}:${m}:${s} ${ampm}`});
                             } else {
                                 res.status(401).json({"Message" : "Invalid email or password"});
                             }

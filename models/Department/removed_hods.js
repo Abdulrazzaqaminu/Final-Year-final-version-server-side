@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-
-const HodSchema = new mongoose.Schema({
+const RemovedHodSchema = new mongoose.Schema({
     employee_id:{
         type: String,
         required: true
@@ -34,10 +33,15 @@ const HodSchema = new mongoose.Schema({
             uppercase: true
         }
     },
-    assign_date: {
+    remove_date: {
         type: String,
+        required: true
+    },
+    assigned_date: {
+        type: String,
+        required: true
     }
-}, {timestamps: true} );
+}, {timestamps: true})
 
-const Hod = mongoose.model("Hod", HodSchema);
-module.exports = Hod;
+const RemovedHod = mongoose.model("Removed_Hod", RemovedHodSchema);
+module.exports = RemovedHod;

@@ -44,7 +44,6 @@ const getAllUnitsUnderDepartment = async (req, res, next) => {
                                                     res.status(200).json(unit[0]);
                                                 }
                                             } else {
-                                                // next(createError(404,"There are no units under this department or the department does not exist" ))
                                                 res.status(404).json({"Message": "There are no units under this department"});
                                             }
                                         }
@@ -382,24 +381,26 @@ const deleteUnit = async (req, res, next) => {
                             if(deleted_unit) {
                                 const Employee_ids = deleted_unit.unit[0].employee_ids;
                                 const Unit_Name = deleted_unit.unit[0].unit_name;
-                                Enrollment.updateMany({_id: Employee_ids},
-                                    {
-                                        unit: "N/A"
-                                    },
-                                    (error, rs) => {
-                                        if(error) throw error;
-                                        else {
-                                            try {
-                                                Department.findOneAndUpdate({_id: Department_ID}, {
-                                                    $pull: {
-                                                        "unit": {
-                                                            "unit_name": Unit_Name
-                                                        } 
-                                                    }
-                                                }, async (error, rs) => {
-                                                    if(error) throw error;
-                                                    else {
-                                                        if(rs) {
+                                if(Employee_ids.length > 0) {
+                                    res.status(400).json({"Message": "Transfer all employee's before deleting unit"})
+                                } else {
+                                    Enrollment.updateMany({_id: Employee_ids},
+                                        {
+                                            unit: "N/A"
+                                        },
+                                        (error, rs) => {
+                                            if(error) throw error;
+                                            else {
+                                                try {
+                                                    Department.findOneAndUpdate({_id: Department_ID}, {
+                                                        $pull: {
+                                                            "unit": {
+                                                                "unit_name": Unit_Name
+                                                            } 
+                                                        }
+                                                    }, async (error, rs) => {
+                                                        if(error) throw error;
+                                                        else {
                                                             Unit.findOneAndUpdate({"unit._id": Unit_ID},
                                                             {
                                                                 $pull: {
@@ -411,21 +412,19 @@ const deleteUnit = async (req, res, next) => {
                                                             (error, rs) => {
                                                                 if(error) throw error;
                                                                 else {
-                                                                    if(rs) {
-                                                                        const delete_unit = deleted_unit.unit[0]
-                                                                        res.status(200).json({"Message": "Unit deleted successfully",delete_unit});
-                                                                    }
+                                                                    const delete_unit = deleted_unit.unit[0]
+                                                                    res.status(200).json({"Message": "Unit deleted successfully",delete_unit});
                                                                 }
                                                             });
                                                         }
-                                                    }
-                                                })
-                                            } catch (error) {
-                                                next(error);
+                                                    })
+                                                } catch (error) {
+                                                    next(error);
+                                                }
                                             }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             } else {
                                 res.status(404).json({"Message": "Unit does not exist"});
                             }

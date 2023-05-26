@@ -1,6 +1,7 @@
 const Department = require("../../models/Department/department");
 const Unit = require("../../models/Department/unit");
 const Hod = require("../../models/Department/hod");
+const RemovedHod = require("../../models/Department/removed_hods");
 const WorkingHours = require("../../models/Attendance/working_hours");
 const DailyPay = require("../../models/Daily_Pay/daily_pay");
 const Leave = require("../../models/Leave/leave");
@@ -257,39 +258,92 @@ const updateDepartment = async (req, res, next) => {
                                                                 (error, hod_dept_updated) => {
                                                                     if(error) throw error;
                                                                     else {
-                                                                        Enrollment.updateMany({_id: Employee_ids},
+                                                                        RemovedHod.findOneAndUpdate(
+                                                                            {"department.dept_id": Department_ID},
                                                                             {
-                                                                                department: req.body.dept_name
+                                                                                department: {
+                                                                                    dept_id: Department_ID,
+                                                                                    dept_name: req.body.dept_name
+                                                                                }
                                                                             },
-                                                                            (error, rs) => {
-                                                                                if(error) throw error
-                                                                                else {
-                                                                                    Unit.findOneAndUpdate(
-                                                                                        // fields
+                                                                            {new: true},
+                                                                            (error, removed_hod_updated) => {
+                                                                                if(error) throw error;else {
+                                                                                    Enrollment.updateMany({_id: Employee_ids},
                                                                                         {
-                                                                                            "dept.dept_id": Department_ID,
-                                                                                            "unit.dept_name": Department_Name
-                                                                                        },
-                                                                                        // what to update to
-                                                                                        {
-                                                                                            dept: {
-                                                                                                dept_id: Department_ID,
-                                                                                                dept_name: req.body.dept_name
-                                                                                            },
-                                                                                            $set: {
-                                                                                                "unit.$[field].dept_name": req.body.dept_name
-                                                                                            }
-                                                                                        },
-                                                                                        // condition
-                                                                                        {
-                                                                                            arrayFilters: [{"field.dept_name": Department_Name}]
+                                                                                            department: req.body.dept_name
                                                                                         },
                                                                                         (error, rs) => {
-                                                                                            if(error) throw error;
+                                                                                            if(error) throw error
                                                                                             else {
-                                                                                                if(rs) {
-                                                                                                    res.status(200).json({"Message": "Department name updated successfully",updated_department});
-                                                                                                }
+                                                                                                Enrollment.findOne({"hod.dept_id": Department_ID}, (error, hod) => {
+                                                                                                    if(error) throw error;
+                                                                                                    else {
+                                                                                                        Unit.findOneAndUpdate(
+                                                                                                            // fields
+                                                                                                            {
+                                                                                                                "dept.dept_id": Department_ID,
+                                                                                                                "unit.dept_name": Department_Name
+                                                                                                            },
+                                                                                                            // what to update to
+                                                                                                            {
+                                                                                                                dept: {
+                                                                                                                    dept_id: Department_ID,
+                                                                                                                    dept_name: req.body.dept_name
+                                                                                                                },
+                                                                                                                $set: {
+                                                                                                                    "unit.$[field].dept_name": req.body.dept_name
+                                                                                                                }
+                                                                                                            },
+                                                                                                            // condition
+                                                                                                            {
+                                                                                                                arrayFilters: [{"field.dept_name": Department_Name}]
+                                                                                                            },
+                                                                                                            (error, rs) => {
+                                                                                                                if(error) throw error;
+                                                                                                                else {
+                                                                                                                    if(rs) {
+                                                                                                                        if(hod?.hod?.status === true) {
+                                                                                                                            Enrollment.findOneAndUpdate({"hod.dept_id": Department_ID}, 
+                                                                                                                            {
+                                                                                                                                hod: {
+                                                                                                                                    status: hod?.hod?.status,
+                                                                                                                                    assigned_date: hod?.hod?.assigned_date,
+                                                                                                                                    dept_id: Department_ID,
+                                                                                                                                    dept_name: req.body.dept_name
+                                                                                                                                }
+                                                                                                                            },
+                                                                                                                            {new: true},
+                                                                                                                            (error, hod_updated) => {
+                                                                                                                                if(error) throw error;
+                                                                                                                                else {
+                                                                                                                                    res.status(200).json({"Message": "Department name updated successfully",updated_department});
+                                                                                                                                }
+                                                                                                                            })
+                                                                                                                        } else {
+                                                                                                                            Enrollment.findOneAndUpdate({"hod.dept_id": Department_ID}, 
+                                                                                                                            {
+                                                                                                                                hod: {
+                                                                                                                                    status: hod?.hod?.status,
+                                                                                                                                    remove_date: hod?.hod?.remove_date,
+                                                                                                                                    dept_id: Department_ID,
+                                                                                                                                    dept_name: req.body.dept_name
+                                                                                                                                }
+                                                                                                                            },
+                                                                                                                            {new: true},
+                                                                                                                            (error, hod_updated) => {
+                                                                                                                                if(error) throw error;
+                                                                                                                                else {
+                                                                                                                                    res.status(200).json({"Message": "Department name updated successfully",updated_department});
+                                                                                                                                }
+                                                                                                                            })
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        )
+                                                                                                    }
+                                                                                                }) 
                                                                                             }
                                                                                         }
                                                                                     )
@@ -331,31 +385,33 @@ const deleteDepartment = async (req, res, next) => {
                 if(rs.length > 0) {
                     const Employee_ids = rs[0].employee_ids;
                     const Department_Name = rs[0].dept_name;
-                    Hod.findOneAndDelete({"department.dept_id": Department_ID}, async (error, hod_deleted) =>{
-                        if(error) throw error;
-                        else {          
-                            await Unit.deleteMany({"dept.dept_id": Department_ID});
-                            try {           
-                                Enrollment.updateMany({_id: Employee_ids},
-                                    {
-                                        department: "N/A",
-                                        unit: "N/A"
-                                    },
-                                    async (error, rs) => {
-                                        if(error) throw error
-                                        else {
-                                            if(rs) {
+                    if(Employee_ids.length > 0) {
+                        res.status(400).json({"Message": "Transfer all employee's before deleting department"})
+                    } else {
+                        Hod.findOneAndDelete({"department.dept_id": Department_ID}, async (error, hod_deleted) =>{
+                            if(error) throw error;
+                            else {          
+                                await Unit.deleteMany({"dept.dept_id": Department_ID});
+                                try {           
+                                    Enrollment.updateMany({_id: Employee_ids},
+                                        {
+                                            department: "N/A",
+                                            unit: "N/A",
+                                        },
+                                        async (error, rs) => {
+                                            if(error) throw error
+                                            else {
                                                 const deleted_depts = await Department.findByIdAndDelete(Department_ID);
                                                 res.status(200).json({"Message": "Department deleted successfully",deleted_depts});
                                             }
-                                            }
-                                    }
-                                )
-                            } catch(error) {
-                                next(error);
+                                        }
+                                    )
+                                } catch(error) {
+                                    next(error);
+                                }
                             }
-                        }
-                    })
+                        })
+                    }
                 } else {
                     res.status(404).json({"Message": "Department trying to be deleted does not exist"});
                 }

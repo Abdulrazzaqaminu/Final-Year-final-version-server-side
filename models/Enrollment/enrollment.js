@@ -86,6 +86,25 @@ const EnrollmentSchema = new mongoose.Schema({
     qrcode: {
         type: String,
         required: true
+    },
+    hod: {
+        status: {
+            type: Boolean,
+            default: false
+        },
+        assigned_date: {
+            type: String
+        },
+        remove_date: {
+            type: String
+        },
+        dept_id: {
+            type: String
+        },
+        dept_name: {
+            type: String,
+            uppercase: true
+        }
     }
 }, {timestamps: true} )
 
