@@ -1322,49 +1322,53 @@ const recordAttendance = async (req, res, next) => {
                                                             // Entry with delete end
                                                         } else {       
                                                             try {
-                                                                Exit.find({email: Employee_Email}, async (error, result) => { 
-                                                                    if(error) throw error;
-                                                                    else {
-                                                                        if(result.length > 0) {
-                                                                            var day = new Date();
-                                                                            var time = day.getTime()
-                                                                            var timeOffSet = day.getTimezoneOffset()
-                                                                            var current_day = new Date(time - timeOffSet*60*1000).toISOString().substr(0,10).replace('T', ' ');
-                                                                            AttendanceHistory.find({email: Employee_Email, date: current_day, out_time: "Still In"}, (error, result) => {
-                                                                                if(error) throw error;
-                                                                                else {
-                                                                                    if(result.length > 0) {
-                                                                                        res.status(400).json({"Message": "Already checked in today"})
-                                                                                    } else {
-                                                                                        Exit.findOneAndDelete({email: Employee_Email}, async (error, result) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                if(result) {
-                                                                                                    // console.log("Exit deleted");            
-                                                                                                    await newEntry.save();
-                                                                                                    // console.log("Added to entry");
-                                                                                                    await newHistoryEntry.save();
-                                                                                                    // console.log("Added to history");
-                                                                                                    res.status(200).json({"Message" : "Checked In"});
+                                                                var day = new Date();
+                                                                if(day.getHours() > 12) {
+                                                                    res.status(400).json({"Message": "Too late for work"})
+                                                                } else {
+                                                                    Exit.find({email: Employee_Email}, async (error, result) => { 
+                                                                        if(error) throw error;
+                                                                        else {
+                                                                            if(result.length > 0) {
+                                                                                var time = day.getTime()
+                                                                                var timeOffSet = day.getTimezoneOffset()
+                                                                                var current_day = new Date(time - timeOffSet*60*1000).toISOString().substr(0,10).replace('T', ' ');
+                                                                                AttendanceHistory.find({email: Employee_Email, date: current_day, out_time: "Still In"}, (error, result) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        if(result.length > 0) {
+                                                                                            res.status(400).json({"Message": "Already checked in today"})
+                                                                                        } else {
+                                                                                            Exit.findOneAndDelete({email: Employee_Email}, async (error, result) => {
+                                                                                                if(error) throw error;
+                                                                                                else {
+                                                                                                    if(result) {
+                                                                                                        // console.log("Exit deleted");            
+                                                                                                        await newEntry.save();
+                                                                                                        // console.log("Added to entry");
+                                                                                                        await newHistoryEntry.save();
+                                                                                                        // console.log("Added to history");
+                                                                                                        res.status(200).json({"Message" : "Checked In"});
+                                                                                                    }
                                                                                                 }
-                                                                                            }
-                                                                                        })
+                                                                                            })
+                                                                                        }
                                                                                     }
+                                                                                })
+                                                                            } else if(result.length === 0) {
+                                                                                await newEntry.save();
+                                                                                // console.log("Added to entry");
+                                                                                try {
+                                                                                    await newHistoryEntry.save();
+                                                                                    res.status(200).json({"Message" : "Checked In"});
+                                                                                    // console.log("Added to history");
+                                                                                } catch (error) {
+                                                                                    next(error);
                                                                                 }
-                                                                            })
-                                                                        } else if(result.length === 0) {
-                                                                            await newEntry.save();
-                                                                            // console.log("Added to entry");
-                                                                            try {
-                                                                                await newHistoryEntry.save();
-                                                                                res.status(200).json({"Message" : "Checked In"});
-                                                                                // console.log("Added to history");
-                                                                            } catch (error) {
-                                                                                next(error);
                                                                             }
                                                                         }
-                                                                    }
-                                                                })
+                                                                    })
+                                                                } 
                                                             } catch (error) {
                                                                 next(error);
                                                             }
