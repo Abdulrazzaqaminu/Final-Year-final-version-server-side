@@ -574,219 +574,73 @@ const unenroll = async (req, res, next) => {
                     const EMAIL = employee.email;
                     const Employee_qrcode = employee.qrcode;
 
-                    Enrollment.findOneAndUpdate(
-                        {_id: Employee_ID}, 
-                        {
-                            status: "Terminated",
-                            $unset: {
-                                qrcode: Employee_qrcode
-                            }
-                        },
-                        (error, employee_updated) => {
-                            if(error) throw error;
-                            else {
-                                if(employee_updated) {
-                                    Payroll.findOneAndDelete({employee_id: Employee_ID}, (error, emp_paroll) => {
+                    Hod.findOne({employee_id: Employee_ID}, (error, rs) => {
+                        if(error) throw error;
+                        else {
+                            if(rs) {
+                                res.status(400).json({"Message": "Remove employee from HOD status"})
+                            } else {
+                                Enrollment.findOneAndUpdate(
+                                    {_id: Employee_ID}, 
+                                    {
+                                        status: "Terminated",
+                                        $unset: {
+                                            qrcode: Employee_qrcode
+                                        }
+                                    },
+                                    (error, employee_updated) => {
                                         if(error) throw error;
                                         else {
-                                            if(emp_paroll) {
-                                                Hod.findOne({employee_id: Employee_ID}, (error, rs) => {
+                                            if(employee_updated) {
+                                                Payroll.findOneAndDelete({employee_id: Employee_ID}, (error, emp_paroll) => {
                                                     if(error) throw error;
                                                     else {
-                                                        if(rs) {
-                                                            Enrollment.findOne({_id: Employee_ID, unit: "N/A"}, (error, rs) => {
-                                                                if(error) throw error;
-                                                                else {
-                                                                    if(rs) {
-                                                                        Hod.findOneAndDelete({employee_id: Employee_ID}, (error, rs) => {
-                                                                            if(error) throw error;
-                                                                            else {
-                                                                                if(rs) {
-                                                                                    Department.findOneAndUpdate({employee_ids: Employee_ID}, 
-                                                                                        {
-                                                                                            $pull: {
-                                                                                                employee_ids: Employee_ID
-                                                                                            }
-                                                                                        },
-                                                                                        (error, rs) => {
-                                                                                        if(error) throw error;
-                                                                                        else {
-                                                                                            if(rs) {
-                                                                                                Department.findOneAndUpdate({"dept_HOD.hod_id": Employee_ID},
-                                                                                                    {
-                                                                                                        $unset: {
-                                                                                                            dept_HOD: {
-                                                                                                                hod_id: Employee_ID,
-                                                                                                                hod_first_name: FIRST_NAME,
-                                                                                                                hod_last_name: LAST_NAME,
-                                                                                                                hod_email: EMAIL
-                                                                                                            }
-                                                                                                        }
-                                                                                                    },
-                                                                                                    async (error, rs) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            if(rs) {
-                                                                                                                await DailyPay.deleteMany({employee_ID: Employee_ID})
-                                                                                                                await Entry.deleteMany({email: EMAIL})
-                                                                                                                await Exit.deleteMany({email: EMAIL})
-                                                                                                                res.status(200).json({"Message": "Employee has been terminated"});
-                                                                                                            }
-                                                                                                        }
-                                                                                                    }
-                                                                                                )
-                                                                                            }
+                                                        if(emp_paroll) {
+                                                            Department.findOneAndUpdate({employee_ids: Employee_ID}, 
+                                                                {
+                                                                    $pull: {
+                                                                        employee_ids: Employee_ID
+                                                                    }
+                                                                },
+                                                                (error, rs) => {
+                                                                    if(error) throw error;
+                                                                    else {
+                                                                        if(rs) {
+                                                                            Unit.findOneAndUpdate({"unit.employee_ids": Employee_ID},
+                                                                                {
+                                                                                    $pull: {
+                                                                                        "unit.$.employee_ids": Employee_ID
+                                                                                    }
+                                                                                },
+                                                                                async (error, rs) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        if(rs) {
+                                                                                            await DailyPay.deleteMany({employee_ID: Employee_ID})
+                                                                                            await Entry.deleteMany({email: EMAIL})
+                                                                                            await Exit.deleteMany({email: EMAIL})
+                                                                                            res.status(200).json({"Message": "Employee has been terminated"});
                                                                                         }
-                                                                                    })
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        })
-                                                                    } else {
-                                                                        Hod.findOneAndDelete({employee_id: Employee_ID}, (error, rs) => {
-                                                                            if(error) throw error;
-                                                                            else {
-                                                                                if(rs) {
-                                                                                    Department.findOneAndUpdate({employee_ids: Employee_ID}, 
-                                                                                        {
-                                                                                            $pull: {
-                                                                                                employee_ids: Employee_ID
-                                                                                            }
-                                                                                        },
-                                                                                        (error, rs) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                if(rs) {
-                                                                                                    Unit.findOneAndUpdate({"unit.employee_ids": Employee_ID},
-                                                                                                        {
-                                                                                                            $pull: {
-                                                                                                                "unit.$.employee_ids": Employee_ID
-                                                                                                            }
-                                                                                                        },
-                                                                                                        (error, rs) => {
-                                                                                                            if(error) throw error;
-                                                                                                            else {
-                                                                                                                if(rs) {
-                                                                                                                    Department.findOneAndUpdate({"dept_HOD.hod_id": Employee_ID},
-                                                                                                                        {
-                                                                                                                            $unset: {
-                                                                                                                                dept_HOD: {
-                                                                                                                                    hod_id: Employee_ID,
-                                                                                                                                    hod_first_name: FIRST_NAME,
-                                                                                                                                    hod_last_name: LAST_NAME,
-                                                                                                                                    hod_email: EMAIL
-                                                                                                                                }
-                                                                                                                            }
-                                                                                                                        },
-                                                                                                                        async (error, rs) => {
-                                                                                                                            if(error) throw error;
-                                                                                                                            else {
-                                                                                                                                if(rs) {
-                                                                                                                                    await DailyPay.deleteMany({employee_ID: Employee_ID})
-                                                                                                                                    await Entry.deleteMany({email: EMAIL})
-                                                                                                                                    await Exit.deleteMany({email: EMAIL})
-                                                                                                                                    res.status(200).json({"Message": "Employee has been terminated"});
-                                                                                                                                }
-                                                                                                                            }
-                                                                                                                        }
-                                                                                                                    )
-                                                                                                                }
-                                                                                                            }
-                                                                                                        }
-                                                                                                    )
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    )
-                                                                                }
-                                                                            }
-                                                                        })
+                                                                            )
+                                                                        }
                                                                     }
                                                                 }
-                                                            })
+                                                            )
                                                         } else {
-                                                            // not hod
-                                                            Enrollment.findOne({_id: Employee_ID, department: "N/A"}, async (error, rs) => {
-                                                                if(error) throw error;
-                                                                else {
-                                                                    if(rs) {
-                                                                        await DailyPay.deleteMany({employee_ID: Employee_ID})
-                                                                        await Entry.deleteMany({email: EMAIL})
-                                                                        await Exit.deleteMany({email: EMAIL})
-                                                                        res.status(200).json({"Message": "Employee has been terminated"});
-                                                                    } else {
-                                                                        Enrollment.findOne({_id: Employee_ID, unit: "N/A"}, (error, rs) => {
-                                                                            if(error) throw error;
-                                                                            else {
-                                                                                if(rs) {
-                                                                                    Department.findOneAndUpdate({employee_ids: Employee_ID}, 
-                                                                                        {
-                                                                                            $pull: {
-                                                                                                employee_ids: Employee_ID
-                                                                                            }
-                                                                                        },
-                                                                                        async (error, rs) => {
-                                                                                        if(error) throw error;
-                                                                                        else {
-                                                                                            if(rs) {
-                                                                                                await DailyPay.deleteMany({employee_ID: Employee_ID})
-                                                                                                await Entry.deleteMany({email: EMAIL})
-                                                                                                await Exit.deleteMany({email: EMAIL})
-                                                                                                res.status(200).json({"Message": "Employee has been terminated"});
-                                                                                            }
-                                                                                        }
-                                                                                    })
-                                                                                } else {
-                                                                                    Department.findOneAndUpdate({employee_ids: Employee_ID}, 
-                                                                                        {
-                                                                                            $pull: {
-                                                                                                employee_ids: Employee_ID
-                                                                                            }
-                                                                                        },
-                                                                                        (error, rs) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                if(rs) {
-                                                                                                    Unit.findOneAndUpdate({"unit.employee_ids": Employee_ID},
-                                                                                                        {
-                                                                                                            $pull: {
-                                                                                                                "unit.$.employee_ids": Employee_ID
-                                                                                                            }
-                                                                                                        },
-                                                                                                        async (error, rs) => {
-                                                                                                            if(error) throw error;
-                                                                                                            else {
-                                                                                                                if(rs) {
-                                                                                                                    await DailyPay.deleteMany({employee_ID: Employee_ID})
-                                                                                                                    await Entry.deleteMany({email: EMAIL})
-                                                                                                                    await Exit.deleteMany({email: EMAIL})
-                                                                                                                    res.status(200).json({"Message": "Employee has been terminated"});
-                                                                                                                }
-                                                                                                            }
-                                                                                                        }
-                                                                                                    )
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    )
-                                                                                }
-                                                                            }
-                                                                        })
-                                                                    }
-                                                                }
-                                                            })
+                                                            res.status(404).json({"Message": "Employee has been terminated"});
                                                         }
                                                     }
-                                                })
-                                            } else {
-                                                res.status(404).json({"Message": "Employee has been terminated"});
+                                                });
+                                                // res.status(200).json({"Message": "Employee's account is no longer active"});
                                             }
                                         }
-                                    });
-                                    // res.status(200).json({"Message": "Employee's account is no longer active"});
-                                }
+                                    }
+                                )
                             }
                         }
-                    )
+                    })
                 } else {
                     res.status(404).json({"Message": "Employee not found"});
                 }

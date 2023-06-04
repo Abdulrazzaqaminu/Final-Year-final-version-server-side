@@ -31,7 +31,7 @@ const DB_URI = process.env.DB_URI;
 const connection = async () => {
     try {
         mongoose.set('strictQuery', false);
-        await mongoose.connect(DB_URI, {useNewUrlParser: true});
+        await mongoose.connect(DB_URI, {useNewUrlParser: true, useUnifiedTopology: true, family: 4});
     } catch (error) {
         throw error;
     }

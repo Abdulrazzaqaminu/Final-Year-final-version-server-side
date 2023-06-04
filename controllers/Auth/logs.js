@@ -55,6 +55,7 @@ const login = async (req, res, next) => {
                                 res.status(401).json({"Message" : "Invalid email or password"});
                             }
                         } else {
+                            console.log(admin)
                             res.status(401).json({"Message" : "Invalid email or password"});
                         }
                     }

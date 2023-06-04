@@ -33,6 +33,12 @@ const RemovedHodSchema = new mongoose.Schema({
             uppercase: true
         }
     },
+    no_of_units: {
+        type: String,
+    },
+    no_of_employees: {
+        type: String,
+    },
     remove_date: {
         type: String,
         required: true

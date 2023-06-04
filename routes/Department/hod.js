@@ -10,7 +10,7 @@ const verifyToken = require("../../essentials/verifyToken");
 // assign HOD to department
 router.put("/:dept_id", verifyToken, assign_hod);
 // get list of HOD's
-router.get("/", verifyToken, getAllHods);
+router.get("/", getAllHods);
 // get single HOD
 router.get("/:hod_id", verifyToken, getSingleHod);
 // remove employee as HOD

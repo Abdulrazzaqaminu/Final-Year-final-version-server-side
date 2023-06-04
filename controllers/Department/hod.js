@@ -48,6 +48,8 @@ const assign_hod = async (req, res, next) => {
                                                             else {
                                                                 if(rs) {
                                                                     const Department_Name = rs.dept_name;
+                                                                    const NumberOfUnits = rs?.unit?.length;
+                                                                    const NumberOfEmployees = rs?.employee_ids?.length;
                                                                     Hod.findOne({"department.dept_id": Department_ID}, (error, hod_exists) => {
                                                                         if(error) throw error;
                                                                         else {
@@ -57,11 +59,19 @@ const assign_hod = async (req, res, next) => {
                                                                                 RemovedHod.findOneAndDelete({"department.dept_id": Department_ID}, (error, deleted_hod) => {
                                                                                     if(error) throw error;
                                                                                     else {
+                                                                                        let day = new Date();
+                                                                                        let options = {
+                                                                                            weekday: "long", 
+                                                                                            day: "numeric",
+                                                                                            month: "long",
+                                                                                            year: "numeric"
+                                                                                        }
+                                                                                        let date = day.toLocaleDateString("en-us", options)
                                                                                         Enrollment.findOneAndUpdate({_id: Employee_ID},
                                                                                             {
                                                                                                 hod: {
                                                                                                     status: true,
-                                                                                                    assigned_date: new Date(),
+                                                                                                    assigned_date: date,
                                                                                                     dept_id: Department_ID,
                                                                                                     dept_name: Department_Name
                                                                                                 }
@@ -77,7 +87,7 @@ const assign_hod = async (req, res, next) => {
                                                                                                                 hod_first_name: First_Name,
                                                                                                                 hod_last_name: Last_Name,
                                                                                                                 hod_email: Email,
-                                                                                                                hod_assign_date: new Date()
+                                                                                                                hod_assign_date: date
                                                                                                             }
                                                                                                         },
                                                                                                         {new: true},
@@ -93,7 +103,8 @@ const assign_hod = async (req, res, next) => {
                                                                                                                         dept_id: Department_ID,
                                                                                                                         dept_name: Department_Name 
                                                                                                                     },
-                                                                                                                    assign_date: new Date()
+                                                                                                                    no_of_units: NumberOfUnits, no_of_employees: NumberOfEmployees,
+                                                                                                                    assign_date: date
                                                                                                                 });
                                                                                                                 await newHod.save();
                                                                                                                 res.status(200).json({"Message": "HOD assigned successfully",updated_department});
@@ -139,16 +150,30 @@ const assign_hod = async (req, res, next) => {
 
 const getAllHods = async (req, res, next) => {
     try {
-        Hod.find({}, (error, rs) => {
-            if(error) throw error;
-            else {
-                if(rs.length > 0) {
-                    res.status(200).json(rs);
-                } else {
-                    res.status(404).json({"Message": "There are no hods"});
+        const { hod_status } = req.query;
+        if(hod_status !== "Removed") {
+            Hod.find({}, (error, hods) => {
+                if(error) throw error;
+                else {
+                    if(hods.length > 0) {
+                        res.status(200).json(hods);
+                    } else {
+                        res.status(400).json({"Message": "There are no assigned hods"});
+                    }
                 }
-            }
-        })
+            })
+        } else {
+            RemovedHod.find({}, (error, hods) => {
+                if(error) throw error;
+                else {
+                    if(hods.length > 0) {
+                        res.status(200).json(hods);
+                    } else {
+                        res.status(400).json({"Message": "There are no removed hods"});
+                    }
+                }
+            })
+        }
     } catch (error) {
         next(error);
     }
@@ -187,6 +212,8 @@ const removeHod = async (req, res, next) => {
                     const HOD_ASSIGN_DATE = hod.assign_date;
                     const Department_ID = hod.department.dept_id;
                     const Department_Name = hod.department.dept_name;
+                    const NumberOfEmployees = hod.no_of_employees;
+                    const NumberOfUnits = hod.no_of_units;
                     Department.findByIdAndUpdate(Department_ID, {
                         // could not use $pull because dept_HOD was not an array so $unset was used
                         $unset: {
@@ -204,11 +231,19 @@ const removeHod = async (req, res, next) => {
                         if(error) throw error;
                         else {
                             if(updated_department) {
+                                let day = new Date();
+                                let options = {
+                                    weekday: "long", 
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                }
+                                let date = day.toLocaleDateString("en-us", options)
                                 Enrollment.findOneAndUpdate({_id: HOD_ID},
                                     {
                                         hod: {
                                             status: false,
-                                            remove_date: new Date(),
+                                            remove_date: date,
                                             dept_id: Department_ID,
                                             dept_name: Department_Name
                                         }
@@ -219,14 +254,15 @@ const removeHod = async (req, res, next) => {
                                         else {
                                             if(updated_employee) {
                                                 const removedHod = new RemovedHod({
-                                                    employee_id: HOD_ID, hod_first_name: HOD_EMAIL,
+                                                    employee_id: HOD_ID, hod_first_name: HOD_FIRST_NAME,
                                                     staff_ID: Staff_ID, hod_last_name: HOD_LAST_NAME, 
                                                     hod_email: HOD_EMAIL,
                                                     department: {
                                                         dept_id: Department_ID,
                                                         dept_name: Department_Name
                                                     },
-                                                    remove_date: new Date(),
+                                                    no_of_units: NumberOfUnits, no_of_employees: NumberOfEmployees,
+                                                    remove_date: date,
                                                     assigned_date: HOD_ASSIGN_DATE
                                                 })
                                                 await removedHod.save()

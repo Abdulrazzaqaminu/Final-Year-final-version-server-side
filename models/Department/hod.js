@@ -34,6 +34,12 @@ const HodSchema = new mongoose.Schema({
             uppercase: true
         }
     },
+    no_of_units: {
+        type: String,
+    },
+    no_of_employees: {
+        type: String,
+    },
     assign_date: {
         type: String,
     }
