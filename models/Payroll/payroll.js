@@ -28,12 +28,6 @@ const PayrollSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    employee_id: [
-        {
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: Enrollment
-        }
-    ],
     loans: {
         type: [
             Number

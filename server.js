@@ -21,7 +21,6 @@ const payrollRoute = require("./routes/Payroll/payroll");
 const employeeSalaryRoute = require("./routes/Payroll/Employee_Salary/employee_salary");
 const adminLogRoute = require("./routes/Auth/logs");
 const localGoveRoute = require("./routes/Local_Gov/localGov");
-const filterAllRoute = require("./routes/FilterAll/filterAll")
 
 // Environmental variables
 const PORT = process.env.PORT;
@@ -68,7 +67,6 @@ app.use("/api/payroll", payrollRoute);
 app.use("/api/payroll", employeeSalaryRoute);
 app.use("/api/log", adminLogRoute);
 app.use("/api/localGov", localGoveRoute);
-app.use("/api/filterAll", filterAllRoute);
 // 
 
 app.listen(PORT, () => {

@@ -8,7 +8,7 @@ const findEmployee = async (req, res, next) => {
             else {
                 if(result.length > 0) {
                     let Employee_Email = result[0].email;
-                    Enrollment.find({email: Employee_Email, status: "Active"}, {qrcode: 0}, (error, employee) => {
+                    Enrollment.find({email: Employee_Email, status: "Active"}, (error, employee) => {
                         if(error) throw error;
                         else {
                             if(employee.length > 0) {

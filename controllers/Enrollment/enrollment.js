@@ -4,13 +4,14 @@ const Hod = require("../../models/Department/hod");
 const Unit = require("../../models/Department/unit"); 
 const Loans = require("../../models/Loans/loans");
 const Payroll = require("../../models/Payroll/payroll");
-// const AttendanceHistory = require("../../models/Attendance/attendanceHistory");
 const Entry = require("../../models/Attendance/entry");
 const Exit = require("../../models/Attendance/exit");
 const WorkingHours = require("../../models/Attendance/working_hours");
 const DailyPay = require("../../models/Daily_Pay/daily_pay");
 const Leave = require("../../models/Leave/leave");
 const qrcode = require("qrcode");
+const fs = require('fs');
+const path = require('path');
 
 const enrollEmployee = async (req, res, next) => {
     const emptyFields = [];
@@ -38,11 +39,11 @@ const enrollEmployee = async (req, res, next) => {
         emptyFields.push("enrollment_date");
     } if(!req.body.employee_type) {
         emptyFields.push("employee_type");
-    } if(!req.body.address.state) {
+    } if(!req.body.state) {
         emptyFields.push("state");
-    } if(!req.body.address.city) {
+    } if(!req.body.city) {
         emptyFields.push("city");
-    } if(!req.body.address.street) {
+    } if(!req.body.street) {
         emptyFields.push("street");
     } 
     if(emptyFields.length > 0) {
@@ -53,9 +54,9 @@ const enrollEmployee = async (req, res, next) => {
         const correct_language = /^[a-zA-Z0-9]+(\s+[a-zA-Z0-9]+)*$/
     
         if(correct_email.test(req.body.email)) {
-            if(double_space.test(req.body.address.street)) {
+            if(double_space.test(req.body.street)) {
                 res.status(400).json({"Message": "Invalid whitespace at street"})
-            } else if(correct_language.test(req.body.address.street)) {
+            } else if(correct_language.test(req.body.street)) {
                 if(req.body.position === "1") {
                     if(req.body.grade === "1") {
                         var Salary = 20000
@@ -81,143 +82,141 @@ const enrollEmployee = async (req, res, next) => {
                         var Salary = 5000000
                     }
                 }
-                qrcode.toFile(req.body.email+".png",req.body.email);
-                qrcode.toDataURL(req.body.email, (error, qr) => {
-                    if(error) throw error;
-                    else {
-                        const newEmployee = new Enrollment({
-                            staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
-                            email: req.body.email, date_of_birth: req.body.date_of_birth, phone_number: req.body.phone_number,
-                            department: req.body.department, unit: req.body.unit, position: req.body.position,
-                            grade: req.body.grade, employee_type: req.body.employee_type, enrollment_date: req.body.enrollment_date, 
-                            gross_salary: Salary,
-                            address: {
-                                state: req.body.address.state, 
-                                city: req.body.address.city, 
-                                street: req.body.address.street
-                            }, qrcode: qr
-                        });
-                        try {
-                            Enrollment.findOne({staff_ID: req.body.staff_ID}, (error, employee) => {
-                                if(error) throw error;
-                                else{
-                                    if(employee) {
-                                        res.status(400).json({"Message": "Staff ID already exist"});
-                                    } else {
-                                        Enrollment.findOne({email: req.body.email}, (error, rs) => {
-                                            if(error) throw error;
-                                            else {
-                                                if(rs) {
-                                                    res.status(400).json({"Message": "Email or Phone Number already exist"});
-                                                } else {
-                                                    // console.log(req.body.address.state);
-                                                    Enrollment.findOne({phone_number: req.body.phone_number}, (error, rs) => {
-                                                        if(error) throw error;
-                                                        else {
-                                                            if(rs) {
-                                                                res.status(400).json({"Message": "Phone Number or Email already exist"});
-                                                            } else {
-                                                                Department.findOne({dept_name: req.body.department}, (error, department) => {
-                                                                    if(error) throw error;
-                                                                    else {
-                                                                        if(department) {
-                                                                            Unit.findOne({"unit.unit_name": req.body.unit}, (error, unit) => {
-                                                                                if(error) throw error;
-                                                                                else {
-                                                                                    if(unit) {
-                                                                                        // checking if the unit given is under the department given
-                                                                                        Unit.find({"unit.unit_name": req.body.unit},{"dept.dept_id": 1, _id: 0}, (error, rs) => {
-                                                                                            if(error) throw error;
-                                                                                            else {
-                                                                                                if(rs.length > 0) {
-                                                                                                    const Department_ID = rs[0].dept.dept_id;
-                                                                                                    // console.log(Department_ID);
-                                                                                                    Department.findOne({_id: Department_ID, dept_name: req.body.department}, async (error, rs) => {
-                                                                                                        if(error) throw error;
-                                                                                                        else {
-                                                                                                            if(rs) {
-                                                                                                                const enrolledEmployee = await newEmployee.save();
-                                                                                                                try {
-                                                                                                                    const employeePayroll = new Payroll({
-                                                                                                                        staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
-                                                                                                                        email: req.body.email, employee_type: req.body.employee_type, 
-                                                                                                                        enrollment_date: req.body.enrollment_date, employee_id: newEmployee._id, 
-                                                                                                                        annual_gross: Salary
-                                                                                                                    });
-                                                                                                                    await employeePayroll.save();
-                                                                                                                    try {
-                                                                                                                        Department.findOneAndUpdate(
-                                                                                                                            {dept_name: req.body.department}, 
-                                                                                                                            {
-                                                                                                                                $push: {
-                                                                                                                                    employee_ids: enrolledEmployee._id
-                                                                                                                                }
-                                                                                                                            },
-                                                                                                                            (error, dept_updated) => {
-                                                                                                                            if(error) throw error;
-                                                                                                                            else {
-                                                                                                                                if(dept_updated) {
-                                                                                                                                    Unit.findOneAndUpdate(
-                                                                                                                                        {"unit.unit_name": req.body.unit},
-                                                                                                                                        {
-                                                                                                                                            $push: {
-                                                                                                                                                "unit.$.employee_ids": enrolledEmployee._id
-                                                                                                                                            }
-                                                                                                                                        }, 
-                                                                                                                                        (error, unit_updated) => {
-                                                                                                                                            if(error) throw error
-                                                                                                                                            else {
-                                                                                                                                                if(unit_updated) {
-                                                                                                                                                    res.status(200).json({"Message": "Employee enrolled successfully", enrolledEmployee});
-                                                                                                                                                }
-                                                                                                                                            }
+                const outputDir = '../qrcodes';
+                if (!fs.existsSync(outputDir)) {
+                    fs.mkdirSync(outputDir), { recursive: true };
+                }
+                const outputFilename = path.join(outputDir, `${req.body.email}.png`);
+                qrcode.toFile(outputFilename, req.body.email);
+                const newEmployee = new Enrollment({
+                    staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
+                    email: req.body.email, date_of_birth: req.body.date_of_birth, phone_number: req.body.phone_number,
+                    department: req.body.department, unit: req.body.unit, position: req.body.position,
+                    grade: req.body.grade, employee_type: req.body.employee_type, enrollment_date: req.body.enrollment_date, 
+                    gross_salary: Salary,
+                    state: req.body.state, 
+                    city: req.body.city, 
+                    street: req.body.street
+                });
+                try {
+                    Enrollment.findOne({staff_ID: req.body.staff_ID}, (error, employee) => {
+                        if(error) throw error;
+                        else{
+                            if(employee) {
+                                res.status(400).json({"Message": "Staff ID already exist"});
+                            } else {
+                                Enrollment.findOne({email: req.body.email}, (error, rs) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(rs) {
+                                            res.status(400).json({"Message": "Email or Phone Number already exist"});
+                                        } else {
+                                            // console.log(req.body.state);
+                                            Enrollment.findOne({phone_number: req.body.phone_number}, (error, rs) => {
+                                                if(error) throw error;
+                                                else {
+                                                    if(rs) {
+                                                        res.status(400).json({"Message": "Phone Number or Email already exist"});
+                                                    } else {
+                                                        Department.findOne({dept_name: req.body.department}, (error, department) => {
+                                                            if(error) throw error;
+                                                            else {
+                                                                if(department) {
+                                                                    Unit.findOne({"unit.unit_name": req.body.unit}, (error, unit) => {
+                                                                        if(error) throw error;
+                                                                        else {
+                                                                            if(unit) {
+                                                                                // checking if the unit given is under the department given
+                                                                                Unit.find({"unit.unit_name": req.body.unit},{"dept.dept_id": 1, _id: 0}, (error, rs) => {
+                                                                                    if(error) throw error;
+                                                                                    else {
+                                                                                        if(rs.length > 0) {
+                                                                                            const Department_ID = rs[0].dept.dept_id;
+                                                                                            // console.log(Department_ID);
+                                                                                            Department.findOne({_id: Department_ID, dept_name: req.body.department}, async (error, rs) => {
+                                                                                                if(error) throw error;
+                                                                                                else {
+                                                                                                    if(rs) {
+                                                                                                        const enrolledEmployee = await newEmployee.save();
+                                                                                                        try {
+                                                                                                            const employeePayroll = new Payroll({
+                                                                                                                staff_ID: req.body.staff_ID, first_name: req.body.first_name, last_name: req.body.last_name,
+                                                                                                                email: req.body.email, employee_type: req.body.employee_type, 
+                                                                                                                enrollment_date: req.body.enrollment_date, employee_id: newEmployee._id, 
+                                                                                                                annual_gross: Salary
+                                                                                                            });
+                                                                                                            await employeePayroll.save();
+                                                                                                            try {
+                                                                                                                Department.findOneAndUpdate(
+                                                                                                                    {dept_name: req.body.department}, 
+                                                                                                                    {
+                                                                                                                        $push: {
+                                                                                                                            employee_ids: enrolledEmployee._id
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    (error, dept_updated) => {
+                                                                                                                    if(error) throw error;
+                                                                                                                    else {
+                                                                                                                        if(dept_updated) {
+                                                                                                                            Unit.findOneAndUpdate(
+                                                                                                                                {"unit.unit_name": req.body.unit},
+                                                                                                                                {
+                                                                                                                                    $push: {
+                                                                                                                                        "unit.$.employee_ids": enrolledEmployee._id
+                                                                                                                                    }
+                                                                                                                                }, 
+                                                                                                                                (error, unit_updated) => {
+                                                                                                                                    if(error) throw error
+                                                                                                                                    else {
+                                                                                                                                        if(unit_updated) {
+                                                                                                                                            res.status(200).json({"Message": "Employee enrolled successfully", enrolledEmployee});
                                                                                                                                         }
-                                                                                                                                    )
+                                                                                                                                    }
                                                                                                                                 }
-                                                                                                                            }
-                                                                                                                        });
-                                                                                                                    } catch (error) {
-                                                                                                                        next(error);
+                                                                                                                            )
+                                                                                                                        }
                                                                                                                     }
-                                                                                                                } catch (error) {
-                                                                                                                    next(error);
-                                                                                                                }
-                                                                                                                // console.log("unit is under department");
-                                                                                                            } else {
-                                                                                                                res.status(400).json({"Message": "Unit is not under department"});
+                                                                                                                });
+                                                                                                            } catch (error) {
+                                                                                                                next(error);
                                                                                                             }
+                                                                                                        } catch (error) {
+                                                                                                            next(error);
                                                                                                         }
-                                                                                                    });
+                                                                                                        // console.log("unit is under department");
+                                                                                                    } else {
+                                                                                                        res.status(400).json({"Message": "Unit is not under department"});
+                                                                                                    }
                                                                                                 }
-                                                                                            }
-                                                                                        });
-                                                                                        // 
-                                                                                        // res.status(200).json({"Message": "unit exits"});
-                                                                                    } else {
-                                                                                        res.status(404).json({"Message": "Unit given does not exist"});
+                                                                                            });
+                                                                                        }
                                                                                     }
-                                                                                }
-                                                                            });
-                                                                            // res.status(200).json({"Message": "matches"});
-                                                                        } else {
-                                                                            res.status(404).json({"Message": " Department given does not exist"});
+                                                                                });
+                                                                                // 
+                                                                                // res.status(200).json({"Message": "unit exits"});
+                                                                            } else {
+                                                                                res.status(404).json({"Message": "Unit given does not exist"});
+                                                                            }
                                                                         }
-                                                                    }
-                                                                });
+                                                                    });
+                                                                    // res.status(200).json({"Message": "matches"});
+                                                                } else {
+                                                                    res.status(404).json({"Message": " Department given does not exist"});
+                                                                }
                                                             }
-                                                        }
-                                                    })
+                                                        });
+                                                    }
                                                 }
-                                            }
-                                        });
+                                            })
+                                        }
                                     }
-                                }
-                            });
-                        } catch (error) {
-                            next(error);
+                                });
+                            }
                         }
-                    }
-                })
+                    });
+                } catch (error) {
+                    next(error);
+                }
             } else {
                 res.status(400).json({"Message": "Whitespace at the begining or end of street field"})
             }
@@ -226,6 +225,118 @@ const enrollEmployee = async (req, res, next) => {
         }
 
 
+    }
+}
+
+const csvEnroll = async (req, res, next) => {
+    try {
+        const { formttedCsv } = req.body;
+        // Create the output directory if it doesn't exist
+        const outputDir = '../qrcodes';
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir), { recursive: true };
+        }
+        formttedCsv?.forEach(async (emp, index) => {
+            try {
+                // Generate the QR code
+                const outputFilename = path.join(outputDir, `${emp.email}.png`);
+                qrcode.toFile(outputFilename, emp.email);
+              } catch (error) {
+                next(error);
+            }
+        })
+        Enrollment.findOne({staff_ID: formttedCsv?.map((empStaffID) => empStaffID.staff_ID)}, (error, foundStaffID) => {
+            if(error) throw error;
+            else {
+                if(foundStaffID) {
+                    res.status(400).json({"Message": "A Staff ID already exists"});
+                } else {
+                    Enrollment.findOne({email: formttedCsv?.map((empEmial) => empEmial.email)}, (error, foundEmail) => {
+                        if(error) throw error;
+                        else {
+                            if(foundEmail) {
+                                res.status(400).json({"Message": "An Email or Phone Number already exists"});
+                            } else {
+                                Enrollment.findOne({phone_number: formttedCsv?.map((empPhn) => empPhn.phone_number)}, async (error, foundPhn) => {
+                                    if(error) throw error;
+                                    else {
+                                        if(foundPhn) {
+                                            res.status(400).json({"Message": "A Phone Number or an Email already exists"});
+                                        } else {
+                                            const departmentExists = [];
+                                            const isDeptCreated = [];
+                                            // Create a function to handle the asynchronous operations
+                                            async function updateDepartmentsAndUnits() {
+                                                const exists = formttedCsv.map(async (employee) => {
+                                                    const departmentName = employee.department;
+                                                    const unitName = employee.unit;
+
+                                                    const deptExists = Department.find({dept_name: departmentName}).exec();
+                                                    const unExists = Unit.find({"unit.unit_name": unitName}).exec();
+                                                    const [departmentExistDoc, unitExistDoc] = await Promise.all([deptExists, unExists]);
+
+                                                    isDeptCreated.push(departmentExistDoc);
+
+                                                    return unitExistDoc;
+
+                                                });
+                                                const existDoc = await Promise.all(exists);
+                                                if(isDeptCreated.some(subArray => subArray?.length === 0)) {
+                                                    return res.status(400).json({"Message": "One or more departments do not exist"})
+                                                } else if(existDoc.some(subArray => subArray?.length === 0)) {
+                                                    return res.status(400).json({"Message": "One or more units do not exist"})
+                                                } else {
+                                                    const employees = [];
+                                                    formttedCsv?.map((emp) => employees.push(emp))
+                                                    const enrolledEmployee = await Enrollment.insertMany(employees);
+                                                    await Payroll.insertMany(
+                                                        formttedCsv?.map((empDetails) => (
+                                                            {
+                                                                staff_ID: empDetails?.staff_ID, first_name: empDetails?.first_name, last_name: empDetails?.last_name,
+                                                                email: empDetails?.email, employee_type: empDetails?.employee_type, 
+                                                                enrollment_date: empDetails?.enrollment_date, 
+                                                                annual_gross: empDetails?.gross_salary
+                                                            }
+                                                        ))
+                                                    )
+                                                    const updatePromises = enrolledEmployee.map(async (employee) => {
+                                                        const departmentName = employee.department;
+                                                        const unitName = employee.unit;
+                                                        const employeeId = employee._id;
+                                                    
+                                                        const departmentUpdate = Department.findOneAndUpdate(
+                                                          { dept_name: departmentName },
+                                                          { $push: { employee_ids: employeeId } },
+                                                          { new: true }
+                                                        ).exec();
+                                                    
+                                                        const unitUpdate = Unit.findOneAndUpdate(
+                                                          { "unit.unit_name": unitName },
+                                                          { $push: { "unit.$.employee_ids": employeeId } }
+                                                        ).exec();
+                                                    
+                                                        const [departmentDoc, unitDoc] = await Promise.all([departmentUpdate, unitUpdate]);
+                                                    
+                                                        departmentExists.push(departmentDoc);
+                                                        return unitDoc;
+                                                    });
+                                                    await Promise.all(updatePromises);
+                                                    
+                                                    res.status(200).json({"Message": "Employees enrolled successfully", enrolledEmployee});
+                                                }
+                                            }
+                                            updateDepartmentsAndUnits();
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    } catch (error) {
+        next(error)
     }
 }
 
@@ -249,7 +360,7 @@ const getEmployees = async (req, res, next) => {
 const getSingleEmployee = async (req, res, next) => {
     const Employee_ID = req.params.employee_id;
     try {
-        Enrollment.findOne({_id: Employee_ID}, {qrcode: 0},(error, single_employee) => {
+        Enrollment.findOne({_id: Employee_ID},(error, single_employee) => {
             if(error) throw error;
             else {
                 if(single_employee) {
@@ -569,10 +680,7 @@ const unenroll = async (req, res, next) => {
             if(error) throw error;
             else {
                 if(employee) {
-                    const FIRST_NAME = employee.first_name;
-                    const LAST_NAME = employee.last_name;
                     const EMAIL = employee.email;
-                    const Employee_qrcode = employee.qrcode;
 
                     Hod.findOne({employee_id: Employee_ID}, (error, rs) => {
                         if(error) throw error;
@@ -584,15 +692,12 @@ const unenroll = async (req, res, next) => {
                                     {_id: Employee_ID}, 
                                     {
                                         status: "Terminated",
-                                        $unset: {
-                                            qrcode: Employee_qrcode
-                                        }
                                     },
                                     (error, employee_updated) => {
                                         if(error) throw error;
                                         else {
                                             if(employee_updated) {
-                                                Payroll.findOneAndDelete({employee_id: Employee_ID}, (error, emp_paroll) => {
+                                                Payroll.findOneAndDelete({email: EMAIL}, (error, emp_paroll) => {
                                                     if(error) throw error;
                                                     else {
                                                         if(emp_paroll) {
@@ -653,6 +758,7 @@ const unenroll = async (req, res, next) => {
 
 module.exports = {
     enrollEmployee,
+    csvEnroll,
     getEmployees,
     getSingleEmployee,
     edit_employee,

@@ -201,47 +201,8 @@ const getSingleEmployeeLoan = async (req, res, next) => {
     }
 }
 
-const clearLoan = async (req, res, next) => {
-    const Employee_ID = req.params.employee_id;
-    try {
-        Enrollment.find({_id: Employee_ID}, (error, employee) => {
-            if(error) throw error;
-            else {
-                if(employee.length > 0) {
-                    Loans.find({employee_ID: Employee_ID}, (error, employee_loan) => {
-                        if(error) throw error;
-                        else{
-                            if(employee_loan.length > 0){
-                                const Loan_Amount = employee_loan[0].loan_amount;
-                                console.log(Loan_Amount);
-                                Payroll.findOneAndUpdate({employee_id: Employee_ID}, {
-                                    $pull: {
-                                        loans: Loan_Amount
-                                    }
-                                }, (error, employee_loan) => {
-                                    if(error) throw error;
-                                    else {
-                                        res.status(400).json({"Message" : "Employees loan has been cleared"});
-                                    }
-                                })
-                            } else {
-                                res.status(404).json({"Message" : "Employee has no loan"});
-                            }
-                        }
-                    }).sort({createdAt: -1})
-                } else {
-                    res.status(404).json({"Message" : "Employee not found"});
-                }
-            }
-        })
-    } catch (error) {
-        next(error);
-    }
-}
-
 module.exports = {
     loanPayment,
     getLoans,
     getSingleEmployeeLoan,
-    clearLoan
 };

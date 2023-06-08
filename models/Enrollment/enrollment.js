@@ -65,27 +65,21 @@ const EnrollmentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    address: {
-        state: {
-            type: String,
-            required: true
-        },
-        city: {
-            type: String,
-            required: true
-        },
-        street: {
-            type: String,
-            required: true
-        }
+    state: {
+        type: String,
+        required: true
+    },
+    city: {
+        type: String,
+        required: true
+    },
+    street: {
+        type: String,
+        required: true
     },
     status: {
         type: String,
         default: "Active"
-    },
-    qrcode: {
-        type: String,
-        required: true
     },
     hod: {
         status: {

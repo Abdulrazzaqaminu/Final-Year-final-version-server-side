@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
     enrollEmployee,
+    csvEnroll,
     getEmployees, 
     getSingleEmployee,
     edit_employee,
@@ -14,6 +15,8 @@ router.get("/", verifyToken, getEmployees);
 router.get("/:employee_id", verifyToken, getSingleEmployee);
 // enroll employees
 router.post("/", verifyToken, enrollEmployee);
+// enroll employees using csv file
+router.post("/csv", verifyToken, csvEnroll);
 // edit employee information
 router.put("/:employee_id", verifyToken, edit_employee);
 // unenroll employee

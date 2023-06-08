@@ -1,6 +1,5 @@
 const Entry = require("../../../models/Attendance/entry");
 const Exit = require("../../../models/Attendance/exit");
-// const Payroll = require("../../../models/Payroll/payroll");
 const AttendanceHistory = require("../../../models/Attendance/attendanceHistory");
 const WorkingHours = require("../../../models/Attendance/working_hours");
 const DailyPay = require("../../../models/Daily_Pay/daily_pay");

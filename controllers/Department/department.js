@@ -70,7 +70,7 @@ const getSingledepartment = async (req, res, next) => {
             else {
                 if(departments) {
                     const Employee_Ids = departments.employee_ids
-                    Enrollment.find({_id:Employee_Ids}, {qrcode: 0} ,(error, employees) => {
+                    Enrollment.find({_id:Employee_Ids},(error, employees) => {
                         if(error) throw error;
                         else {
                             if(employees.length > 0) {

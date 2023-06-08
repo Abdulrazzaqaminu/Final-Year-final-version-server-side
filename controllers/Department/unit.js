@@ -1,7 +1,6 @@
 const Unit = require("../../models/Department/unit");
 const Department = require("../../models/Department/department");
 const Enrollment = require("../../models/Enrollment/enrollment");
-// const createError = require("../../essentials/error");
 
 const getAllUnitsUnderDepartment = async (req, res, next) => {
     const Department_ID = req.params.dept_id;
