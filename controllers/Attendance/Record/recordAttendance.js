@@ -76,8 +76,8 @@ const recordAttendance = async (req, res, next) => {
                                                             let diff_msec = real_time.getTime() - in_datetime.getTime()
                                                             let diff_hours = Math.floor(diff_msec / 1000 / 60 / 60);
 
-                                                            if(diff_hours < 3) {
-                                                                res.status(400).json({"Message": "Working hours should exceed 2"})
+                                                            if(diff_hours < 4) {
+                                                                res.status(400).json({"Message": "Working hours should exceed 3"})
                                                             }  else { 
                                                                 Entry.findOneAndDelete({email : Employee_Email}, async (error, result) => {
                                                                     if(error) throw error;
@@ -1325,8 +1325,8 @@ const recordAttendance = async (req, res, next) => {
                                                                 if(day.getHours() < 8) {
                                                                     res.status(400).json({"Message": "Work starts at 8 AM"})
                                                                 } else {
-                                                                    if(day.getHours() > 12) {
-                                                                        res.status(400).json({"Message": "Check-in time has passed 11:59 AM"})
+                                                                    if(day.getHours() > 13) {
+                                                                        res.status(400).json({"Message": "Check-in time has passed 12:59 AM"})
                                                                     } else {
                                                                         Exit.find({email: Employee_Email}, async (error, result) => { 
                                                                             if(error) throw error;

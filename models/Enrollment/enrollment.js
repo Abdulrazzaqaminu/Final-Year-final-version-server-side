@@ -65,15 +65,11 @@ const EnrollmentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    state: {
+    state_of_origin: {
         type: String,
         required: true
     },
-    city: {
-        type: String,
-        required: true
-    },
-    street: {
+    localGov: {
         type: String,
         required: true
     },

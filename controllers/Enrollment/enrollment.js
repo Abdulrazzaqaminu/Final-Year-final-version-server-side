@@ -94,9 +94,8 @@ const enrollEmployee = async (req, res, next) => {
                     department: req.body.department, unit: req.body.unit, position: req.body.position,
                     grade: req.body.grade, employee_type: req.body.employee_type, enrollment_date: req.body.enrollment_date, 
                     gross_salary: Salary,
-                    state: req.body.state, 
-                    city: req.body.city, 
-                    street: req.body.street
+                    state_of_origin: req.body.state, 
+                    localGov: req.body.localGov, 
                 });
                 try {
                     Enrollment.findOne({staff_ID: req.body.staff_ID}, (error, employee) => {
@@ -236,11 +235,13 @@ const csvEnroll = async (req, res, next) => {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir), { recursive: true };
         }
-        formttedCsv?.forEach(async (emp, index) => {
+        formttedCsv?.map((emp, index) => {
             try {
-                // Generate the QR code
-                const outputFilename = path.join(outputDir, `${emp.email}.png`);
-                qrcode.toFile(outputFilename, emp.email);
+                if(emp?.email) {
+                    // Generate the QR code
+                    const outputFilename = path.join(outputDir, `${emp?.email}.png`);
+                    qrcode.toFile(outputFilename, emp?.email)
+                }
               } catch (error) {
                 next(error);
             }
@@ -271,7 +272,7 @@ const csvEnroll = async (req, res, next) => {
                                                     const departmentName = employee.department;
                                                     const unitName = employee.unit;
 
-                                                    const deptExists = Department.find({dept_name: departmentName}).exec();
+                                                    const deptExists = Department.find({dept_name: departmentName});
                                                     const unExists = Unit.find({"unit.unit_name": unitName}).exec();
                                                     const [departmentExistDoc, unitExistDoc] = await Promise.all([deptExists, unExists]);
 
@@ -756,11 +757,149 @@ const unenroll = async (req, res, next) => {
     }
 }
 
+const employeeFilter = async (req, res, next) => {
+    try {
+        const { filterCategory, filterInput } = req.query;
+        if(filterCategory === 'Status') {
+            if(filterInput) {
+                Enrollment.find({status: filterInput}, (error, filteredResult) => {
+                    if(error) throw error;
+                    else {
+                        if(filteredResult.length > 0) {
+                            res.status(200).json(filteredResult);
+                        } else {
+                            res.status(200).json(filteredResult);
+                        }
+                    }
+                });
+            }
+        } else if(filterCategory === 'Department') {
+            if(filterInput) {
+                Enrollment.find({department: filterInput}, (error, filteredResult) => {
+                    if(error) throw error;
+                    else {
+                        if(filteredResult.length > 0) {
+                            res.status(200).json(filteredResult);
+                        } else {
+                            res.status(200).json(filteredResult);
+                        }
+                    }
+                });
+            }
+        } else if(filterCategory === 'Unit') {
+            if(filterInput) {
+                Enrollment.find({unit: filterInput}, (error, filteredResult) => {
+                    if(error) throw error;
+                    else {
+                        if(filteredResult.length > 0) {
+                            res.status(200).json(filteredResult);
+                        } else {
+                            res.status(200).json(filteredResult);
+                        }
+                    }
+                });
+            }
+        } else if(filterCategory === 'Position') {
+            if(filterInput) {
+                Enrollment.find(
+                    {
+                        position: {
+                            $gte: filterInput,
+                        }
+                    },
+                    (error, filteredResult) => {
+                        if(error) throw error;
+                        else {
+                            if(filteredResult.length > 0) {
+                                res.status(200).json(filteredResult);
+                            } else {
+                                res.status(200).json(filteredResult);
+                            }
+                        }
+                    }
+                );
+            };
+        } else if(filterCategory === 'Grade') {
+            if(filterInput) {
+                Enrollment.find(
+                    {
+                        grade: {
+                            $gte: filterInput,
+                        }
+                    },
+                    (error, filteredResult) => {
+                        if(error) throw error;
+                        else {
+                            if(filteredResult.length > 0) {
+                                res.status(200).json(filteredResult);
+                            } else {
+                                res.status(200).json(filteredResult);
+                            }
+                        }
+                    }
+                );
+            };
+        } else if(filterCategory === 'Employment Type') {
+            if(filterInput) {
+                Enrollment.find({employee_type: filterInput}, (error, filteredResult) => {
+                    if(error) throw error;
+                    else {
+                        if(filteredResult.length > 0) {
+                            res.status(200).json(filteredResult);
+                        } else {
+                            res.status(200).json(filteredResult);
+                        }
+                    }
+                })
+            }
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+const employeeDept = async (req, res, next) => {
+    try {
+        Department.find({}, (error, dept) => {
+            if(error) throw error;
+            else {
+                if(dept.length > 0) {
+                    res.status(200).json(dept);
+                } else {
+                    res.status(200).json(dept);
+                }
+            }
+        }).sort({createdAt: -1})
+    } catch (error) {
+        next(error)
+    }
+}
+
+const employeeUnit = async (req, res, next) => {
+    try {
+        Unit.find({}, (error, unit) => {
+            if(error) throw error;
+            else {
+                if(unit.length > 0) {
+                    res.status(200).json(unit);
+                } else {
+                    res.status(200).json(unit);
+                }
+            }
+        }).sort({createdAt: -1})
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     enrollEmployee,
     csvEnroll,
     getEmployees,
     getSingleEmployee,
     edit_employee,
-    unenroll
+    unenroll,
+    employeeFilter,
+    employeeDept,
+    employeeUnit
 };

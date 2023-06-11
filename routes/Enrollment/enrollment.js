@@ -6,7 +6,10 @@ const {
     getEmployees, 
     getSingleEmployee,
     edit_employee,
-    unenroll }  = require("../../controllers/Enrollment/enrollment");
+    unenroll,
+    employeeFilter,
+    employeeDept,
+    employeeUnit }  = require("../../controllers/Enrollment/enrollment");
 const verifyToken = require("../../essentials/verifyToken");
 
 // get list of all employees
@@ -21,5 +24,9 @@ router.post("/csv", verifyToken, csvEnroll);
 router.put("/:employee_id", verifyToken, edit_employee);
 // unenroll employee
 router.delete("/:employee_id", verifyToken, unenroll);
+// employee filter
+router.get('/enroll/employeeFilter', verifyToken, employeeFilter);
+router.get('/enroll/employeeFilter/dept', verifyToken, employeeDept);
+router.get('/enroll/employeeFilter/unit', verifyToken, employeeUnit);
 
 module.exports = router;

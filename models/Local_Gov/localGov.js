@@ -4,7 +4,7 @@ const LocalGovSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    cities: [{
+    localGov: [{
         type: String,
         required: true
     }]
