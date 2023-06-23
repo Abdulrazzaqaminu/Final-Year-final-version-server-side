@@ -30,6 +30,10 @@ const AttendanceHistorySchema = new mongoose.Schema({
     out_time: {
         type: String,
         default: "Still In"
+    },
+    hour: {
+        type: String,
+        required: true
     }
 })
 

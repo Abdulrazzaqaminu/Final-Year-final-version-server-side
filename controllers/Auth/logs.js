@@ -14,7 +14,7 @@ const login = async (req, res, next) => {
     if(emptyFields.length > 0) {
         res.status(400).json({"Message": "Fill in the appropriate field(s)", emptyFields})
     } else {
-        const correct_email = /^[\w.+\-]+@gmail\.com$/
+        const correct_email = /^[a-zA-Z0-9]+(?:[_][a-zA-Z0-9]+)+@gmail\.com$/
         if(correct_email.test(req.body.email)) {
             try {
                 const JWT_SECRET = process.env.JWT_SECRET;
@@ -55,7 +55,6 @@ const login = async (req, res, next) => {
                                 res.status(401).json({"Message" : "Invalid email or password"});
                             }
                         } else {
-                            console.log(admin)
                             res.status(401).json({"Message" : "Invalid email or password"});
                         }
                     }

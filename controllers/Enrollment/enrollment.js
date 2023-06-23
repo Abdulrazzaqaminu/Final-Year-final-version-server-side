@@ -39,13 +39,11 @@ const enrollEmployee = async (req, res, next) => {
         emptyFields.push("enrollment_date");
     } if(!req.body.employee_type) {
         emptyFields.push("employee_type");
-    } if(!req.body.state) {
+    } if(!req.body.state_of_origin) {
         emptyFields.push("state");
-    } if(!req.body.city) {
-        emptyFields.push("city");
-    } if(!req.body.street) {
-        emptyFields.push("street");
-    } 
+    } if(!req.body.localGov) {
+        emptyFields.push("loalGov");
+    }
     if(emptyFields.length > 0) {
         res.status(400).json({"Message": "Fill in the appropriate fields", emptyFields})
     } else {
@@ -94,7 +92,7 @@ const enrollEmployee = async (req, res, next) => {
                     department: req.body.department, unit: req.body.unit, position: req.body.position,
                     grade: req.body.grade, employee_type: req.body.employee_type, enrollment_date: req.body.enrollment_date, 
                     gross_salary: Salary,
-                    state_of_origin: req.body.state, 
+                    state_of_origin: req.body.state_of_origin, 
                     localGov: req.body.localGov, 
                 });
                 try {

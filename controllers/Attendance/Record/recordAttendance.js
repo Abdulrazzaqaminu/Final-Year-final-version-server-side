@@ -59,11 +59,11 @@ const recordAttendance = async (req, res, next) => {
                                                     out_time: req.body.time});
                                             
                                                 const newHistoryEntry = new AttendanceHistory({staff_ID: Staff_ID, first_name: Employee_First_Name,
-                                                    last_name: Employee_Last_Name, email: Employee_Email, date: req.body.date,
+                                                    last_name: Employee_Last_Name, email: Employee_Email, date: req.body.date, hour: (req.body.time).slice(0, 2),
                                                     in_time: req.body.time});
                                             
                                                 const newHistoryExit = new AttendanceHistory({staff_ID: Staff_ID, first_name: Employee_First_Name,
-                                                    last_name: Employee_Last_Name, email: Employee_Email, date: req.body.date,
+                                                    last_name: Employee_Last_Name, email: Employee_Email, date: req.body.date, hour: (req.body.time).slice(0, 2),
                                                     out_time: req.body.time});
                                                 Entry.find({email: Employee_Email}, async (error, result) => {
                                                     if(error) throw error;
@@ -1325,8 +1325,8 @@ const recordAttendance = async (req, res, next) => {
                                                                 if(day.getHours() < 8) {
                                                                     res.status(400).json({"Message": "Work starts at 8 AM"})
                                                                 } else {
-                                                                    if(day.getHours() > 13) {
-                                                                        res.status(400).json({"Message": "Check-in time has passed 12:59 AM"})
+                                                                    if(day.getHours() > 12) {
+                                                                        res.status(400).json({"Message": "Check-in time has passed 11:59 AM"})
                                                                     } else {
                                                                         Exit.find({email: Employee_Email}, async (error, result) => { 
                                                                             if(error) throw error;
